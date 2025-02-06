@@ -1,2 +1,2 @@
-from const import *
-from fuzzing import *
+from .const import *
+from .fuzzing import *

