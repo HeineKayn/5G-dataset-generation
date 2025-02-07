@@ -176,7 +176,6 @@ def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool) -
     """
 
     param_extracted = {}
-    print("------")
     for parameter in parameters:
             
         # If the parameter is a reference we replace it by the actual value
