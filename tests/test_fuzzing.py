@@ -32,6 +32,11 @@ def test_extract_parameters():
     assert len(header) == 0
 
     # ----- With $ref to replace
+    file_path = "../5GC_APIs/TS29510_Nnrf_NFDiscovery.yaml"
+    with open(file_path, 'r', encoding='utf-8') as f:
+        yaml_content = yaml.safe_load(f)
+        paths  = yaml_content["paths"]
+
     uri    = "/searches/{searchId}"
     method = "get"
     new_uri, header = extract_parameters(paths[uri][method]['parameters'], uri, file_path, False)

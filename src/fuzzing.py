@@ -176,15 +176,15 @@ def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool) -
     """
 
     param_extracted = {}
+    print("------")
     for parameter in parameters:
             
         # If the parameter is a reference we replace it by the actual value
-        if "$ref" in str(parameter):
-            counter = 0
-            # Repeat maximum 3 times
-            while "$ref" in str(parameter) and counter <= 3: 
-                replace_refs_recursively(file, parameter)
-                counter += 1
+        counter = 0
+        # Repeat maximum 3 times
+        while "$ref" in str(parameter) and counter <= 3: 
+            replace_refs_recursively(file, parameter)
+            counter += 1
 
         # For every parameter that is required
         if ("required" in parameter and parameter["required"]) or not only_required:
