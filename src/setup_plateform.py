@@ -56,14 +56,4 @@ def docker_log(remote_address, nf):
     tcpdump = ssh_terminal(remote_address,control=False) 
     tcpdump.stdin.write(f"sudo docker log -f {nf}") # follow log of any docker
     tcpdump.stdin.flush()
-    
-FREE5GC_PATH  = "~/Deployments/free5gc/2025/thoger"
-POPULATE_PATH = "~/Deployments/free5gc/2025/free5gc-populate"
-
-def start_free5gc(remote_address):
-    os.popen(f'ssh {remote_address} "cd {FREE5GC_PATH} && docker-compose -f docker-compose.yaml up -d"')
-    os.popen(f'ssh {remote_address} "cd {POPULATE_PATH} && ./populate --config config.yaml"')
-    
-def stop_free5gc(remote_address):
-    os.popen(f'ssh {remote_address} "cd {FREE5GC_PATH} && docker-compose -f docker-compose.yaml down"')
 
