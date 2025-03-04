@@ -3,6 +3,12 @@ from src import *
 
 SSH_PORT      = 22
 NCAT_PORT     = 9998
+FORWARD_PORT  = 1090 
+
+'''
+    This code is used because free5gc is deployed on a remote server and allow to interact with it.
+    If you use free5gc on your machine, use setup_plateform instead.
+''' 
 
 def ssh_terminal(address,user="root",control:bool=False):
     
@@ -19,15 +25,45 @@ def ssh_terminal(address,user="root",control:bool=False):
 def local_command(command):
     subprocess.run(["start", "cmd", "/K", command], shell=True)
 
-def listen_oai(remote_address, local_address):
-
-    # Listen on local and redirect to wireshark
+def listen_traffic(remote_address, local_address, plateform):
+    
+    # Local host listen to trafic from remote and redirect to wireshark
     local_command(f"ncat -l {NCAT_PORT} | wireshark -k -i -")  
 
-    # Send trafic on remote and filter only the CN / UE trafic
+    # We use iface any + filter because if we listen 
+    # Before creating the docker the interface won't exist yet
+    if plateform == "oai" : 
+        filter = "src net 192.168.70.128/26 or dst net 192.168.70.128/26 or src net 10.0.0.0/32 or dst net 10.0.0.0/32"
+    elif plateform == "free5gc" :   
+        filter = "src net 10.100.200.0/24 or dst net 10.100.200.0/24 or src net 10.60.0.0/15 or dst net 10.60.0.0/15"
+    else : 
+        filter = "" 
+        
+    # Send trafic from remote to local and filter only the CN / UE trafic
     tcpdump = ssh_terminal(remote_address,control=False) 
-    tcpdump.stdin.write(f"tcpdump -i any 'src net 192.168.70.128/26 or dst net 192.168.70.128/26 or src net 10.0.0.0/32 or dst net 10.0.0.0/32' -v -w - | nc {local_address} {NCAT_PORT}\n") # Envoyer le trafic à notre local
+    tcpdump.stdin.write(f"tcpdump -i any '{filter}' -v -w - | nc {local_address} {NCAT_PORT}\n") # Envoyer le trafic à notre local
     tcpdump.stdin.flush()
 
-    # local_command(f"ssh -D {const_content['forward_port']} -N root@{addresses['server2']}")  # Redirect trafic
-    # ssh_terminal(SSH_ADDRESSES['server2'], control=True)  # Terminal distant interactif pour lancer le core network 
+def forward_request(remote_address):
+    # Allow to make curl calls from host to dockers
+    local_command(f"ssh -D 1090 -N {remote_address}")  
+    
+def port_forward(remote_address, port=5000):
+    # Give access to the webui in the remote docker 
+    local_command(f"ssh -N -L {port}:localhost:{port} {remote_address}")  
+
+def docker_log(remote_address, nf):
+    tcpdump = ssh_terminal(remote_address,control=False) 
+    tcpdump.stdin.write(f"sudo docker log -f {nf}") # follow log of any docker
+    tcpdump.stdin.flush()
+    
+FREE5GC_PATH  = "~/Deployments/free5gc/2025/thoger"
+POPULATE_PATH = "~/Deployments/free5gc/2025/free5gc-populate"
+
+def start_free5gc(remote_address):
+    os.popen(f'ssh {remote_address} "cd {FREE5GC_PATH} && docker-compose -f docker-compose.yaml up -d"')
+    os.popen(f'ssh {remote_address} "cd {POPULATE_PATH} && ./populate --config config.yaml"')
+    
+def stop_free5gc(remote_address):
+    os.popen(f'ssh {remote_address} "cd {FREE5GC_PATH} && docker-compose -f docker-compose.yaml down"')
+

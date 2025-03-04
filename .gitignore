@@ -1,6 +1,4 @@
 .pytest_cache
 */__pycache__
-setup_free5gc.py
-server_state.py
-free5gc_simu.go
+local
 test.ipynb

@@ -17,6 +17,3 @@ addresses :
   evil    : 192.168.70.140
 
   bridge  : 192.168.70.128/26
-
-forward_port : 1080 
-
