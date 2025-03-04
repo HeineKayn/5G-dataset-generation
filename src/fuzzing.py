@@ -61,7 +61,7 @@ def replace_refs_recursively(file:str,yaml_content:dict):
                 if not ref_file : ref_file = file
                 # print(f"Can't find {SOURCE_FOLDER}/{ref_file}{path}") 
         
-def generate_variables(ptype:str)-> str|int|float|bool|list|None:
+def generate_variables(ptype:str):
     """
     Generate a variable of a specified type with random or default values.
     Args:
@@ -157,7 +157,7 @@ def schema_extractor(schema:str)-> str:
     if not value : print("UNRECOGNIZED SCHEMA", var_type)
     return re.sub(r"[^a-zA-Z0-9\-_]", "", str(value)) # remove all character except number, letter and - _
 
-def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool) -> tuple[str,dict]:
+def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
     """
     Extracts and formats parameters from a given dictionary and URI.
     Args:
@@ -215,7 +215,7 @@ def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool) -
     header = param_extracted["header"] if "header" in param_extracted else {}
     return new_uri, header
 
-def extract_body(body:dict, file:str, only_required:bool) -> tuple[str,dict]:
+def extract_body(body:dict, file:str, only_required:bool):
 
     """
         Same that extract_parameters but for the requestBody 
