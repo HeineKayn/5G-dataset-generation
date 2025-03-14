@@ -6,7 +6,7 @@ import os
 
 from src import *
 
-SOURCE_FOLDER = "../5GC_APIs"
+API_SOURCE_FOLDER = "../5GC_APIs"
 
 def _extract_ref(original_file:str, ref:str):
     """
@@ -20,7 +20,7 @@ def _extract_ref(original_file:str, ref:str):
     if not file : file = original_file
 
     # Read the content
-    file_path = f"{SOURCE_FOLDER}/{file}"
+    file_path = f"{API_SOURCE_FOLDER}/{file}"
     with open(file_path, 'r', encoding='utf-8') as file:
         yaml_content = yaml.safe_load(file)
 
@@ -58,7 +58,7 @@ def _replace_refs_recursively(file:str,yaml_content:dict):
             except:
                 ref_file,path = value.split("#")
                 if not ref_file : ref_file = file
-                # print(f"Can't find {SOURCE_FOLDER}/{ref_file}{path}") 
+                # print(f"Can't find {API_SOURCE_FOLDER}/{ref_file}{path}") 
          
 def _schema_extractor(schema:str)-> str:
 
@@ -112,7 +112,7 @@ def _schema_extractor(schema:str)-> str:
     if not value : print("UNRECOGNIZED SCHEMA", var_type)
     return re.sub(r"[^a-zA-Z0-9\-_]", "", str(value)) # remove all character except number, letter and - _
 
-def _extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
+def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
     """
     Extracts and formats parameters from a given dictionary and URI.
     Args:
@@ -173,7 +173,7 @@ def _extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
 def _extract_body(body:dict, file:str, only_required:bool):
 
     """
-        Same that _extract_parameters but for the requestBody 
+        Same that extract_parameters but for the requestBody 
     """
 
     body_extracted = {}
@@ -204,12 +204,12 @@ def fuzz(nb_file=-1, nb_uri=-1, nb_ite=1, nb_method=1, nf_list=["NRF","UDM","AMF
     random.shuffle(nf_list)
     for nf in nf_list:
         nf_file_name = "N" + nf.lower()
-        files = [f for f in os.listdir(SOURCE_FOLDER) if nf_file_name in f]
+        files = [f for f in os.listdir(API_SOURCE_FOLDER) if nf_file_name in f]
         random.shuffle(files)
 
         # For each file
         for file in files[:nb_file] : 
-            file_path = f"{SOURCE_FOLDER}/{file}"
+            file_path = f"{API_SOURCE_FOLDER}/{file}"
 
             # Read the file
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -240,7 +240,7 @@ def fuzz(nb_file=-1, nb_uri=-1, nb_ite=1, nb_method=1, nf_list=["NRF","UDM","AMF
 
                     if 'parameters' in paths[uri][method] :
                         parameters = paths[uri][method]['parameters']
-                        new_uri, header = _extract_parameters(parameters, uri, file, only_required)
+                        new_uri, header = extract_parameters(parameters, uri, file, only_required)
 
                     if 'requestBody' in paths[uri][method]:
                         body = paths[uri][method]['requestBody']['content']

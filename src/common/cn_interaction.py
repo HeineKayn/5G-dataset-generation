@@ -1,15 +1,15 @@
-from src import *
+from . import generate_variables
 import httpx
 import yaml
 
 # Get the IP list of the CN components
-file_path = "./src/const/plateforme_free5gc.yaml"
+file_path = "./src/const/plateform_free5gc.yaml"
 with open(file_path, 'r', encoding='utf-8') as file:
-    ip_list = yaml.safe_load(file)
+    ip_list = yaml.safe_load(file)["addresses"]
 
 def request_cn(nf,data,method,uri,headers={},token="",display=True):
 
-    url = f"http://{ip_list[nf]}" + uri
+    url = f"http://{ip_list[nf]}:8000" + uri
 
     base_headers = {
         # "Content-Type": "application/json", # géré tout seul par .post .get et le fait de mettre data= ou json=

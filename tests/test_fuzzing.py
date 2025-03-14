@@ -3,7 +3,7 @@ from src import *
 
 def test_extract_parameters():
 
-    file_path = "../5GC_APIs/TS29510_Nnrf_NFManagement.yaml"
+    file_path = f"{API_SOURCE_FOLDER}/TS29510_Nnrf_NFManagement.yaml"
     with open(file_path, 'r', encoding='utf-8') as f:
         yaml_content = yaml.safe_load(f)
         paths  = yaml_content["paths"]
