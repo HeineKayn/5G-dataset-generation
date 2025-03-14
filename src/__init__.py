@@ -1,3 +1,4 @@
 from .const import *
-from .fuzzing import *
+from .common import *
+from .attacks import *
 from .setup_plateform import *
