@@ -153,22 +153,22 @@ def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
                     param_extracted[parameter["in"]] = {}
                 param_extracted[parameter["in"]][pname] = _schema_extractor(schema)
 
-    new_uri = uri
+    new_url = uri
 
     # For parameters "in" path we format the uri with the value   
     if "path" in param_extracted : 
-        new_uri = uri.format(**param_extracted["path"])
+        new_url = uri.format(**param_extracted["path"])
         del param_extracted["path"]
 
     # For parameters "in" query we add the value to the uri separated by ? and &
     if "query" in param_extracted : 
         queries = [f"{key}={value}" for key, value in param_extracted["query"].items()]
-        new_uri += "?" + "&".join(queries)
+        new_url += "?" + "&".join(queries)
         del param_extracted["query"]
 
     # The rest is in the header so we return it
     header = param_extracted["header"] if "header" in param_extracted else {}
-    return new_uri, header
+    return new_url, header
 
 def _extract_body(body:dict, file:str, only_required:bool):
 
@@ -194,75 +194,101 @@ def _extract_body(body:dict, file:str, only_required:bool):
 
         return accept, body_extracted
 
-# A TESTER
-def fuzz(nb_file=-1, nb_uri=-1, nb_ite=1, nb_method=1, nf_list=["NRF","UDM","AMF"], only_required=True):
-    '''
-        Check the documentation of a nf_list and send random requests with random (but accurate type) parameters
-    '''
+def _random_nf(nf_list=["NRF","UDM","AMF"]):
+    return random.choice(nf_list)
 
-    # For each NF
-    random.shuffle(nf_list)
-    for nf in nf_list:
-        nf_file_name = "N" + nf.lower()
-        files = [f for f in os.listdir(API_SOURCE_FOLDER) if nf_file_name in f]
-        random.shuffle(files)
+def _random_file(nf):
+    nf_file_name = "N" + nf.lower()
+    files = [f for f in os.listdir(API_SOURCE_FOLDER) if nf_file_name in f]
+    return random.choice(files)
 
-        # For each file
-        for file in files[:nb_file] : 
-            file_path = f"{API_SOURCE_FOLDER}/{file}"
+def _get_spec(file):
+    file_path = f"{API_SOURCE_FOLDER}/{file}"
+    with open(file_path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
+        
+def _random_url(api_spec):
+    paths = api_spec["paths"]
+    urls  = list(paths.keys())
+    return random.choice(urls)
 
-            # Read the file
-            with open(file_path, 'r', encoding='utf-8') as f:
-                yaml_content = yaml.safe_load(f)
+def _random_method(api_spec, url):
+    paths = api_spec["paths"]
+    methods = list(paths[url].keys())
+    return random.choice(methods)
 
+def _setup_fuzzer(api_spec, nf, display=True):
+
+    scope = None
+    try : 
+        scope = api_spec["servers"][0]["url"].split("/")[1]
+        nf_instance_id = generate_variables("uuid")
+        token = setup_rogue(nf_instance_id,scope=scope,target_type=nf)
+        
+        if display : 
             print("==========")
             print(file_path)
-
-            # Need to create a new instance with a proper token
-            try : scope = yaml_content["servers"][0]["url"].split("/")[1]
-            except : scope = "nnrf-disc"
-            nf_instance_id = generate_variables("uuid")
-            token = setup_rogue(nf_instance_id,scope=scope,target_type=nf)
             print(f"Creating {nf} {nf_instance_id} with scope {scope}...")
+        return token
+    
+    except:
+        print(f"Couldn't create access-token for nf {nf} scope {scope}")
+        return 
 
-            # Loop through URIS
-            paths = yaml_content["paths"]
-            uris  = list(paths.keys())
-            random.shuffle(uris)
-            for uri in uris[:nb_uri]:
-                methods = list(paths[uri].keys())
-                random.shuffle(methods)
-
-                for method in methods[:nb_method]:
-
-                    header = {}
-                    body   = {}
-
-                    if 'parameters' in paths[uri][method] :
-                        parameters = paths[uri][method]['parameters']
-                        new_uri, header = extract_parameters(parameters, uri, file, only_required)
-
-                    if 'requestBody' in paths[uri][method]:
-                        body = paths[uri][method]['requestBody']['content']
-                        accept, body = _extract_body(body, file, only_required)
-
-
-                    # If its a file that use the '{apiRoot}/nnrf-nfm/v1' prefix we use it
+def fuzz(nb_file=1, nb_url=1, nb_method=1, nb_ite=1, only_required=True, display=True):
+    
+    nf = _random_nf(["NRF","UDM","AMF"])
+    for _ in range(nb_file):
+        file     = _random_file(nf)
+        api_spec = _get_spec(file)
+        token    = _setup_fuzzer(api_spec,nf,display)
+        
+        if not token : 
+            return
+        
+        for _ in range(nb_url):
+            url      = _random_url(api_spec)
+            
+            for _ in range(nb_method):
+                method   = _random_method(api_spec,url)
+                
+                request_result_list = []
+                header = {}
+                body   = {}
+                
+                new_url = url 
+                
+                if 'parameters' in api_spec["paths"][url][method] :
                     try : 
-                        pre_uri = yaml_content["servers"][0]["url"].replace("{apiRoot}","")
-                        new_uri = pre_uri + new_uri
-                    except : 
+                        parameters = api_spec["paths"][url][method]['parameters']
+                        new_url, header = extract_parameters(parameters, url, file, only_required)
+                    except :
                         pass
 
-                    # When receiving some NF check if the requester/sender NF is the same as the one in the token
-                    # So we force the value if it's present in the uri
-                    new_uri = re.sub('target-nf-type=(.+?)(&|$)', f'target-nf-type={nf}&', new_uri)
-                    new_uri = re.sub('requester-nf-type=(.+?)(&|$)', f'requester-nf-type=AMF&', new_uri)
+                if 'requestBody' in api_spec["paths"][url][method]:
+                    try : 
+                        body = api_spec["paths"][url][method]['requestBody']['content']
+                        accept, body = _extract_body(body, file, only_required)
+                    except :
+                        pass
 
-                    for _ in range(nb_ite):
-                        # print(f"{nf} {method} : {new_uri} (header : {header}, body : {body})")
-                        print("---------")
-                        try : 
-                            request_cn(nf,body,method,new_uri,header,token=token)
-                        except Exception as e:
-                            print(f"Error sending the request: {e}")
+                # If its a file that use the '{apiRoot}/nnrf-nfm/v1' prefix we use it
+                try : 
+                    pre_url = api_spec["servers"][0]["url"].replace("{apiRoot}","")
+                    new_url = pre_url + new_url
+                except : 
+                    pass
+
+                # When receiving some NF check if the requester/sender NF is the same as the one in the token
+                # So we force the value if it's present in the uri
+                new_url = re.sub('target-nf-type=(.+?)(&|$)', f'target-nf-type={nf}&', new_url)
+                new_url = re.sub('requester-nf-type=(.+?)(&|$)', f'requester-nf-type=AMF&', new_url)
+
+                for _ in range(nb_ite):
+                    # print(f"{nf} {method} : {new_url} (header : {header}, body : {body})")
+                    try : 
+                        code, result = request_cn(nf,body,method,new_url,header,token=token)
+                        request_result_list.append(code)
+                    except Exception as e:
+                        print(f"Error sending the request: {e}")
+    

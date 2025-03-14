@@ -2,8 +2,8 @@ from src import *
 
 # ---------
 
-nf_instance_id = generate_variables("uuid")
-token = setup_rogue(nf_instance_id)
+# nf_instance_id = generate_variables("uuid")
+# token = setup_rogue(nf_instance_id)
 # print(token)
 
 # nf_instance_id = 'd69af192-c3cd-4363-98c5-330aada924e4'
@@ -15,7 +15,7 @@ token = setup_rogue(nf_instance_id)
 # crash_nrf(token)
 # random_dump(token)
 
-# fuzz()
+fuzz()
 
 # get_user_data(supi, token)
 
