@@ -23,10 +23,10 @@ def ssh_terminal(address,user="root",control:bool=False):
         text=True
     )
 
-def local_command(command):
-    subprocess.run(["start", "cmd", "/K", command], shell=True)
+def local_command(command, shell=True):
+    subprocess.run(["start", "cmd", "/K", command], shell=shell)
 
-def listen_traffic(remote_address, local_address, plateform):
+def listen_trafic(remote_address, local_address, plateform):
     
     # Local host listen to trafic from remote and redirect to wireshark
     local_command(f"ncat -l {NCAT_PORT} | wireshark -k -i -")  

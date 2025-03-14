@@ -1,15 +1,14 @@
 import yaml
-import uuid
-import base64
-import datetime
 import random
 import exrex
 import re
 import os
 
+from src import *
+
 SOURCE_FOLDER = "../5GC_APIs"
 
-def extract_ref(original_file:str, ref:str):
+def _extract_ref(original_file:str, ref:str):
     """
         Sometimes the data in the yaml point to a ref (location in a file). 
         - Can be in the same file : #/components/schemas/AmfCreateEventSubscription
@@ -32,7 +31,7 @@ def extract_ref(original_file:str, ref:str):
         yaml_content = yaml_content[step]
     return yaml_content  
 
-def replace_refs_recursively(file:str,yaml_content:dict):
+def _replace_refs_recursively(file:str,yaml_content:dict):
     """
        Recursively parses a dictionary and replaces all the $ref keys with their actual values.
         Args:
@@ -47,65 +46,21 @@ def replace_refs_recursively(file:str,yaml_content:dict):
         # Depth first
         value = yaml_content[key]
         if isinstance(value, dict):
-            replace_refs_recursively(file,value)
+            _replace_refs_recursively(file,value)
 
         if key == "$ref" :
 
             # Try to replace the ref (path of data) by the actual value
             try:
-                extracted_ref = extract_ref(file,value)
+                extracted_ref = _extract_ref(file,value)
                 yaml_content.update(extracted_ref)
                 del value
             except:
                 ref_file,path = value.split("#")
                 if not ref_file : ref_file = file
                 # print(f"Can't find {SOURCE_FOLDER}/{ref_file}{path}") 
-        
-def generate_variables(ptype:str):
-    """
-    Generate a variable of a specified type with random or default values.
-    Args:
-        ptype (str): The type of variable to generate. Supported types include:
-            - "uuid": A random UUID string.
-            - "binary": A base64-encoded binary string or None.
-            - "bytes": A base64-encoded byte string.
-            - "string": A random string of length 10.
-            - "date": The current date in ISO 8601 format.
-            - "date-time": The current datetime in ISO 8601 format.
-            - "float": A random positive float.
-            - "double": A random positive double.
-            - "integer": A random positive int32.
-            - "int32": A random positive int32.
-            - "int64": A random positive int64.
-            - "boolean": A random boolean value.
-            - "array": An array of 1 to 10 random integers.
-    Returns:
-        Union[str, int, float, bool, list, None]: The generated variable of the specified type.
-        If the specified type is not supported, returns a string in the format "<ptype>".
-    """
-
-    values = {
-        "uuid": str(uuid.uuid4()),  # UUID format
-        "binary": base64.b64encode(bytes(random.getrandbits(8) for _ in range(10))).decode("utf-8") if random.choice([True, False]) else None,  # Binary string or None
-        "bytes": base64.b64encode(bytes(random.getrandbits(8) for _ in range(10))).decode("utf-8"),  # Byte string
-        "string": ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', k=10)),  # Random string of length 10
-        "date": datetime.date.today().isoformat(),  # Current date in ISO 8601 format
-        "date-time": datetime.datetime.now().isoformat(),  # Current datetime in ISO 8601 format
-        "float": random.uniform(0, 1e6),  # Random positive float
-        "double": random.uniform(0, 1e12),  # Random positive double (in Python, float is double precision)
-        "integer": random.randint(0, 2**31 - 1),  # Random positive int32
-        "int32": random.randint(0, 2**31 - 1),  # Random positive int32
-        "int64": random.randint(0, 2**63 - 1),  # Random positive int64
-        "boolean" : random.choice([True,False]),
-        "array": [random.randint(0, 100) for _ in range(random.randint(1, 10))],  # Tableau de 1 à 10 entiers
-
-    }
-    if ptype in values : 
-        return values[ptype]
-    else : 
-        return f"<{ptype}>"
-    
-def schema_extractor(schema:str)-> str:
+         
+def _schema_extractor(schema:str)-> str:
 
     """
         For every parameter we create a value that correspond to its schema\n
@@ -157,7 +112,7 @@ def schema_extractor(schema:str)-> str:
     if not value : print("UNRECOGNIZED SCHEMA", var_type)
     return re.sub(r"[^a-zA-Z0-9\-_]", "", str(value)) # remove all character except number, letter and - _
 
-def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
+def _extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
     """
     Extracts and formats parameters from a given dictionary and URI.
     Args:
@@ -182,7 +137,7 @@ def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
         counter = 0
         # Repeat maximum 3 times
         while "$ref" in str(parameter) and counter <= 3: 
-            replace_refs_recursively(file, parameter)
+            _replace_refs_recursively(file, parameter)
             counter += 1
 
         # For every parameter that is required
@@ -196,7 +151,7 @@ def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
                 # here we just put the new variable in a dict, with the "in" value as the key
                 if parameter["in"] not in param_extracted:
                     param_extracted[parameter["in"]] = {}
-                param_extracted[parameter["in"]][pname] = schema_extractor(schema)
+                param_extracted[parameter["in"]][pname] = _schema_extractor(schema)
 
     new_uri = uri
 
@@ -215,10 +170,10 @@ def extract_parameters(parameters:dict, uri:str, file:str, only_required:bool):
     header = param_extracted["header"] if "header" in param_extracted else {}
     return new_uri, header
 
-def extract_body(body:dict, file:str, only_required:bool):
+def _extract_body(body:dict, file:str, only_required:bool):
 
     """
-        Same that extract_parameters but for the requestBody 
+        Same that _extract_parameters but for the requestBody 
     """
 
     body_extracted = {}
@@ -226,7 +181,7 @@ def extract_body(body:dict, file:str, only_required:bool):
         counter = 0
         # Repeat maximum 3 times
         while "$ref" in str(parameter) and counter <= 3: 
-            replace_refs_recursively(file, parameter)
+            _replace_refs_recursively(file, parameter)
             counter += 1
 
         if "schema" in parameter : 
@@ -234,7 +189,80 @@ def extract_body(body:dict, file:str, only_required:bool):
             if "properties" in schema:
                 for property, property_desc in schema["properties"].items():
                     if not "required" in schema or ("required" in schema and property in schema["required"]) or not only_required:
-                        value = schema_extractor(property_desc)
+                        value = _schema_extractor(property_desc)
                         body_extracted[property] = value
 
         return accept, body_extracted
+
+# A TESTER
+def fuzz(nb_file=-1, nb_uri=-1, nb_ite=1, nb_method=1, nf_list=["NRF","UDM","AMF"], only_required=True):
+    '''
+        Check the documentation of a nf_list and send random requests with random (but accurate type) parameters
+    '''
+
+    # For each NF
+    random.shuffle(nf_list)
+    for nf in nf_list:
+        nf_file_name = "N" + nf.lower()
+        files = [f for f in os.listdir(SOURCE_FOLDER) if nf_file_name in f]
+        random.shuffle(files)
+
+        # For each file
+        for file in files[:nb_file] : 
+            file_path = f"{SOURCE_FOLDER}/{file}"
+
+            # Read the file
+            with open(file_path, 'r', encoding='utf-8') as f:
+                yaml_content = yaml.safe_load(f)
+
+            print("==========")
+            print(file_path)
+
+            # Need to create a new instance with a proper token
+            try : scope = yaml_content["servers"][0]["url"].split("/")[1]
+            except : scope = "nnrf-disc"
+            nf_instance_id = generate_variables("uuid")
+            token = setup_rogue(nf_instance_id,scope=scope,target_type=nf)
+            print(f"Creating {nf} {nf_instance_id} with scope {scope}...")
+
+            # Loop through URIS
+            paths = yaml_content["paths"]
+            uris  = list(paths.keys())
+            random.shuffle(uris)
+            for uri in uris[:nb_uri]:
+                methods = list(paths[uri].keys())
+                random.shuffle(methods)
+
+                for method in methods[:nb_method]:
+
+                    header = {}
+                    body   = {}
+
+                    if 'parameters' in paths[uri][method] :
+                        parameters = paths[uri][method]['parameters']
+                        new_uri, header = _extract_parameters(parameters, uri, file, only_required)
+
+                    if 'requestBody' in paths[uri][method]:
+                        body = paths[uri][method]['requestBody']['content']
+                        accept, body = _extract_body(body, file, only_required)
+
+
+                    # If its a file that use the '{apiRoot}/nnrf-nfm/v1' prefix we use it
+                    try : 
+                        pre_uri = yaml_content["servers"][0]["url"].replace("{apiRoot}","")
+                        new_uri = pre_uri + new_uri
+                    except : 
+                        pass
+
+                    # When receiving some NF check if the requester/sender NF is the same as the one in the token
+                    # So we force the value if it's present in the uri
+                    new_uri = re.sub('target-nf-type=(.+?)(&|$)', f'target-nf-type={nf}&', new_uri)
+                    new_uri = re.sub('requester-nf-type=(.+?)(&|$)', f'requester-nf-type=AMF&', new_uri)
+
+                    for _ in range(nb_ite):
+                        # print(f"{nf} {method} : {new_uri} (header : {header}, body : {body})")
+                        print("---------")
+                        try : 
+                            request_cn(nf,body,method,new_uri,header,token=token)
+                        except Exception as e:
+                            print(f"Error sending the request: {e}")
