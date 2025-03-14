@@ -1,5 +1,6 @@
 from src import * 
-import time
+import re
+import random
 
 FREE5GC_PATH  = "~/Deployments/free5gc/2025/thoger"
 POPULATE_PATH = "~/Deployments/free5gc/2025/free5gc-populate"
@@ -8,11 +9,11 @@ GNB_CONFIG_PATH = "config/gnbcfg.yaml"
 UE_CONFIG_PATH  = "config/uecfg.yaml"
 
 def start_free5gc():
-    os.popen(f'cd {FREE5GC_PATH} && docker-compose -f docker-compose.yaml up -d')
-    os.popen(f'cd {POPULATE_PATH} && ./populate --config config.yaml')
+    os.popen(f'cd {FREE5GC_PATH} && sudo docker-compose -f docker-compose.yaml up -d')
+    # os.popen(f'cd {POPULATE_PATH} && ./populate --config config.yaml')
     
 def stop_free5gc():
-    os.popen(f'cd {FREE5GC_PATH} && docker-compose -f docker-compose.yaml down')
+    os.popen(f'cd {FREE5GC_PATH} && sudo docker-compose -f docker-compose.yaml down')
 
 def docker_exec(container, command, read=False):
     execution = os.popen(f'sudo docker exec {container} {command}')
@@ -27,15 +28,22 @@ def get_gnb():
     first_gnb  = components[0]
     return first_gnb
     
-def get_all_imsi():
-    components     = ueransim_exec("./nr-cli --dump", read=True).split("\n")
-    only_imsi_list = [component for component in components if "imsi" in component]
+def get_all_imsi_used():
+    components_used = ueransim_exec("./nr-cli --dump", read=True).split("\n")
+    only_imsi_list  = [component for component in components_used if "imsi" in component]
     return only_imsi_list
+
+def get_all_imsi_registered():
+    registered_imsi = []
+    lines = docker_exec("mongodb", 'mongo --eval "db.getSiblingDB(\'free5gc\').subscriptionData.identityData.find();"',read=True)
+    registered_imsi = re.findall(r'imsi-\d{15}', lines)
+    return registered_imsi
     
 def get_new_imsi():
-    # Pioche parmi une liste de disponible
-    # peut être read dans free5gc la liste des imsi déclaré
-    pass
+    all_imsi_used = get_all_imsi_used()
+    all_imsi_registered = get_all_imsi_registered()
+    all_imsi_available = [imsi for imsi in all_imsi_registered if imsi not in all_imsi_used]
+    return random.choice(all_imsi_available)
 
 def register_ue(imsi):
     print(f"Registering new ue : {imsi}")
@@ -79,12 +87,15 @@ def randomCommands():
     pass
 
     
-print('Initial state', get_all_imsi())
-# imsi = get_new_imsi()
-# register_ue(imsi)
+print('Initial state', get_all_imsi_used())
+imsi = get_new_imsi()
+register_ue(imsi)
 
 # time.sleep(2)
-# print('New added', get_all_imsi())
-terminate_all_ue()
-time.sleep(2)
-print('All removed', get_all_imsi())
+# print('New added', get_all_imsi_used())
+# terminate_all_ue()
+# time.sleep(2)
+# print('All removed', get_all_imsi_used())
+
+# reg = get_all_imsi_registered()
+# print(reg)
