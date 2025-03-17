@@ -24,10 +24,21 @@ def test_manipulation():
     assert 200 <= code < 300
     assert len(infos) > 0
     
+    # Get am data
     supi = "imsi-208930000000001"
-    code, infos = get_user_data(supi, token, display=True)
+    code, infos = get_am_data(supi, token, mcc="208", mnc="93", display=False)
     assert 200 <= code < 300
-    assert len(infos) < 0
+    assert len(infos) > 0
+    
+    # Get dnn
+    code, infos = get_dnn(supi, token, mcc="208", mnc="93", display=True)
+    assert 200 <= code < 300
+    assert len(infos) > 0
+    
+    # Get sm data
+    code, infos = get_sm_data(supi, token, mcc="208", mnc="93", sst=1, sd="010203", display=False)
+    assert 200 <= code < 300
+    assert len(infos) > 0
     
     # Remove instance
     code, _ = remove_nf(nf_instance_id, token, display=False)

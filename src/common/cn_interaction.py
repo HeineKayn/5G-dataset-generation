@@ -1,6 +1,7 @@
 from . import generate_variables
 import httpx
 import yaml
+import urllib.parse
 
 # Get the IP list of the CN components
 file_path = "./src/const/plateform_free5gc.yaml"
@@ -24,7 +25,12 @@ def request_cn(nf,data,method,uri,headers={},token="",display=True):
 
     with httpx.Client(http1=False,http2=True, verify=False) as client:
 
-        if method == "POST":
+        if method in ["GET", "DELETE"]:
+            if data : 
+                query_string = urllib.parse.urlencode(data, doseq=True)
+                url += f"?{query_string}"
+            response = client.request(method, url, headers=base_headers)
+        elif method == "POST":
             response = client.request(method, url, data=data, headers=base_headers)
         else :
             response = client.request(method, url, json=data, headers=base_headers)
