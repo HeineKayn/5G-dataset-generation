@@ -43,8 +43,8 @@ def request_cn(nf,data,method,uri,headers={},token="",display=True):
     return response.status_code, result
 
 # OK
-def ping_nf(nf):
-    return request_cn(nf, {}, "GET","")
+def ping_nf(nf, display=True):
+    return request_cn(nf, {}, "GET","", display=display)
 
 # OK
 def add_nf(nf_instance_id, nf_type, display=True):
@@ -60,10 +60,10 @@ def add_nf(nf_instance_id, nf_type, display=True):
     )
 
 # OK
-def remove_nf(nf_instance_id, token):
+def remove_nf(nf_instance_id, token, display=True):
     # curl -s -o /dev/null -w "\n\nHTTP Status Code: %{http_code}\n\n" -X DELETE http://127.0.0.10:8000/nnrf-nfm/v1/nf-instances/$fakeAMF
     uri = f"/nnrf-nfm/v1/nf-instances/{nf_instance_id}"
-    return request_cn("NRF", {}, "DELETE", uri, token=token)
+    return request_cn("NRF", {}, "DELETE", uri, token=token,display=display)
 
 # OK
 def get_token(nf_instance_id, nf_type, scope, target_type, display=True):

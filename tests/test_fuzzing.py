@@ -44,5 +44,5 @@ def test_extract_parameters():
     assert "{" not in new_uri
     
 def test_fuzz():
-    results = fuzz(nb_file=1,nb_uri=1,nb_ite=1,nb_method=1,nf_list=["NRF"],only_required=True,display=False)
+    results = fuzz(nb_file=1,nb_url=1,nb_ite=1,nb_method=1,nf_list=["NRF"],only_required=True,display=False)
     assert len(results) == 1
