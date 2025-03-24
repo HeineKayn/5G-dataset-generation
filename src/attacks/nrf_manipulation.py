@@ -11,6 +11,7 @@ def get_nf_info(requester_nf_type, token, nf_type=None, display=True):
     }
     return request_cn("NRF", data, "GET", uri, token=token, display=display)
 
+
 # KO
 def random_dump(token, display=True):
     # curl "http://127.0.0.10:8000/nnrf-disc/v1/nf-instances?requester-nf-type=$randomString&target-nf-type="

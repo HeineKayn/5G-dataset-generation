@@ -3,10 +3,29 @@ import httpx
 import yaml
 import urllib.parse
 
+import fcntl
+import socket
+import struct
+
 # Get the IP list of the CN components
 file_path = "./src/const/plateform_free5gc.yaml"
 with open(file_path, 'r', encoding='utf-8') as file:
     ip_list = yaml.safe_load(file)["addresses"]
+
+def get_ip_linux(interface: str) -> str:
+    """
+    Uses the Linux SIOCGIFADDR ioctl to find the IP address associated
+    with a network interface, given the name of that interface, e.g.
+    "eth0". Only works on GNU/Linux distributions.
+    Source: https://bit.ly/3dROGBN
+    Returns:
+        The IP address in quad-dotted notation of four decimal integers.
+    """
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    packed_iface = struct.pack('256s', interface.encode('utf_8'))
+    packed_addr = fcntl.ioctl(sock.fileno(), 0x8915, packed_iface)[20:24]
+    return socket.inet_ntoa(packed_addr)
 
 def request_cn(nf,data,method,uri,headers={},token="",display=True):
 
@@ -53,17 +72,48 @@ def ping_nf(nf, display=True):
     return request_cn(nf, {}, "GET","", display=display)
 
 # OK
-def add_nf(nf_instance_id, nf_type, display=True):
-    data = {
-        "nfInstanceId": nf_instance_id,
-        "nfType": nf_type,
-        "nfStatus": "REGISTERED"
-    }
-    return request_cn(
-        "NRF", data, "PUT",
-        f"/nnrf-nfm/v1/nf-instances/{nf_instance_id}",
-        display=display
-    )
+def add_nf(nf_instance_id, nf_type, nf_services=[], display=True):
+  
+  iface = "br-free5gc"
+  ip_address = get_ip_linux(iface)
+  
+  data = {
+      "nfInstanceId": nf_instance_id,
+      "nfType": nf_type,
+      "nfStatus": "REGISTERED",
+      "ipv4Addresses": [
+        ip_address
+      ],
+      "nfServices" : []
+  }
+  
+  for i,nf_service in enumerate(nf_services):
+      data["nfServices"].append({
+          "serviceInstanceId": str(i),
+          "serviceName": nf_service,
+          "versions": [
+            {
+              "apiVersionInUri": "v1",
+              "apiFullVersion": "1.0.3"
+            }
+          ],
+          "scheme": "http",
+          "nfServiceStatus": "REGISTERED",
+          "ipEndPoints": [
+            {
+              "ipv4Address": ip_address,
+              "transport": "TCP",
+              "port": 8000
+            }
+          ],
+          "apiPrefix": f"http://{ip_address}:8000"
+        })
+      
+  return request_cn(
+      "NRF", data, "PUT",
+      f"/nnrf-nfm/v1/nf-instances/{nf_instance_id}",
+      display=display
+  )
 
 # OK
 def remove_nf(nf_instance_id, token, display=True):
