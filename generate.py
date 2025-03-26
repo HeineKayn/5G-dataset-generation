@@ -1,6 +1,7 @@
 from src import * 
 import re
 import random
+import os
 
 FREE5GC_PATH  = "~/Deployments/free5gc/2025/thoger"
 POPULATE_PATH = "~/Deployments/free5gc/2025/free5gc-populate"

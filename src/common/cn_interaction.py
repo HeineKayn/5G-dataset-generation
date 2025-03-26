@@ -75,9 +75,9 @@ def ping_nf(nf, display=True):
     return request_cn(nf, {}, "GET","", display=display)
 
 # OK
-def add_nf(nf_instance_id, nf_type, nf_services=[], display=True):
+def add_nf(nf_instance_id, nf_type, nf_services=[], ip_address = "", display=True):
   
-  ip_address = get_my_ip_linux("br-free5gc") # outside of dockers 
+  if not ip_address : ip_address = get_my_ip_linux("br-free5gc") # outside of dockers 
   if not ip_address : ip_address = get_my_ip_linux("eth0") # inside of a docker
   
   data = {

