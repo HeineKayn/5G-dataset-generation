@@ -52,10 +52,9 @@ def request_cn(nf,data,method,uri,headers={},token="",display=True):
                 query_string = urllib.parse.urlencode(data, doseq=True)
                 url += f"?{query_string}"
             response = client.request(method, url, headers=base_headers)
-        elif method == "POST":
+        else:
             response = client.request(method, url, data=data, headers=base_headers)
-        else :
-            response = client.request(method, url, json=data, headers=base_headers)
+
 
     try    : result = response.json()
     except : result = response.text

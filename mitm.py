@@ -6,13 +6,14 @@ from h2.events import *
 import json
 
 class H2ProxyServer:
-    def __init__(self, host, port, target_host):
+    def __init__(self, host, port, target_host, display=False):
         self.host = host
         self.port = port
         self.target_host = target_host
         self.config = H2Configuration(client_side=False)
         self.connections = {}
         self.buffers = {}
+        self.display = display
 
     async def handle_client(self, reader, writer):
         conn = H2Connection(config=self.config)
@@ -54,8 +55,6 @@ class H2ProxyServer:
         headers = {name.decode('utf-8'): value.decode('utf-8') for name, value in headers}
 
         ip_source = writer.get_extra_info('peername')[0]
-        print("Request from ", ip_source)
-        
         if ip_source != self.target_host:
             
             body = self.buffers.pop(stream_id, b"")  # Obtenir et supprimer le tampon
@@ -64,28 +63,32 @@ class H2ProxyServer:
                 method = headers[":method"]
                 headers = {"authorization": headers["authorization"]}
                 
+                data = {}
                 if body:
-                    data = {}
                     try:
                         data = json.loads(body.decode('utf-8'))
+                        if self.display : 
+                            print(f"Data received {data}")
+                    
                     except json.JSONDecodeError:
                         print("Invalid JSON", body.decode('utf-8'))
                 
                 if method in ["GET", "DELETE"]:
                     response = client.request(method, target_url, headers=headers)
-                elif method == "POST":
-                    response = client.request(method, target_url, data=data, headers=headers)
-                else :
+                else:
                     response = client.request(method, target_url, json=data, headers=headers)
                 
                 response_headers = [(k, v) for k, v in response.headers.items()]
                 if ":status" not in headers : 
                     response_headers = [(":status",str(response.status_code))] + response_headers
+                    
                 conn.send_headers(stream_id, response_headers, end_stream=False)
                 conn.send_data(stream_id, response.content, end_stream=True)
-        else:
-            conn.send_headers(stream_id, [(':status', '200')], end_stream=False)
-            conn.send_data(stream_id, b'Request initiated by udm', end_stream=True)
+                if self.display : 
+                    print(f"Forwarded {target_url} from {ip_source} to {self.target_host}")
+        
+        else: 
+            print(f"Warning : Request from spoofed NF {self.target_host}")
 
     async def run(self):
         server = await asyncio.start_server(self.handle_client, self.host, self.port)
@@ -93,5 +96,5 @@ class H2ProxyServer:
             await server.serve_forever()
 
 if __name__ == '__main__':
-    proxy = H2ProxyServer(host='0.0.0.0', port=8000, target_host='10.100.200.10')
+    proxy = H2ProxyServer(host='0.0.0.0', port=8000, target_host='10.100.200.10', display=True)
     asyncio.run(proxy.run())
