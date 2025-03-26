@@ -22,10 +22,13 @@ def get_my_ip_linux(interface: str) -> str:
         The IP address in quad-dotted notation of four decimal integers.
     """
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    packed_iface = struct.pack('256s', interface.encode('utf_8'))
-    packed_addr = fcntl.ioctl(sock.fileno(), 0x8915, packed_iface)[20:24]
-    return socket.inet_ntoa(packed_addr)
+    try : 
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        packed_iface = struct.pack('256s', interface.encode('utf_8'))
+        packed_addr = fcntl.ioctl(sock.fileno(), 0x8915, packed_iface)[20:24]
+        return socket.inet_ntoa(packed_addr)
+    except :
+        return None
 
 def request_cn(nf,data,method,uri,headers={},token="",display=True):
 
@@ -74,8 +77,8 @@ def ping_nf(nf, display=True):
 # OK
 def add_nf(nf_instance_id, nf_type, nf_services=[], display=True):
   
-  iface = "br-free5gc"
-  ip_address = get_my_ip_linux(iface)
+  ip_address = get_my_ip_linux("br-free5gc") # outside of dockers 
+  if not ip_address : ip_address = get_my_ip_linux("eth0") # inside of a docker
   
   data = {
       "nfInstanceId": nf_instance_id,
