@@ -23,7 +23,6 @@ class H2ProxyServer:
         try:
             while True:
                 data = await reader.read(65535)
-                print("Received data")
                 if not data:
                     break
                 events = conn.receive_data(data)
@@ -40,12 +39,12 @@ class H2ProxyServer:
     async def process_request(self, event, conn, writer):
         headers = {name: value for name, value in event.headers}
         ip_source = writer.get_extra_info('peername')[0]
-
-        print("Process ", ip_source)
+        print("Request from ", ip_source)
         if ip_source != self.target_host:
             with httpx.Client(http1=False,http2=True, verify=False) as client:
                 target_url = f'http://{self.target_host}:8000{headers[b":path"].decode()}'
-                response = client.get(target_url)
+                headers = {b"authorization": headers[b"authorization"]}
+                response = client.get(target_url, headers=headers)
                 response_headers = [(k, v) for k, v in response.headers.items()]
                 if ":status" not in headers : 
                     response_headers = [(":status",str(response.status_code))] + response_headers

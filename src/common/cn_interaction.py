@@ -12,7 +12,7 @@ file_path = "./src/const/plateform_free5gc.yaml"
 with open(file_path, 'r', encoding='utf-8') as file:
     ip_list = yaml.safe_load(file)["addresses"]
 
-def get_ip_linux(interface: str) -> str:
+def get_my_ip_linux(interface: str) -> str:
     """
     Uses the Linux SIOCGIFADDR ioctl to find the IP address associated
     with a network interface, given the name of that interface, e.g.
@@ -75,7 +75,7 @@ def ping_nf(nf, display=True):
 def add_nf(nf_instance_id, nf_type, nf_services=[], display=True):
   
   iface = "br-free5gc"
-  ip_address = get_ip_linux(iface)
+  ip_address = get_my_ip_linux(iface)
   
   data = {
       "nfInstanceId": nf_instance_id,
