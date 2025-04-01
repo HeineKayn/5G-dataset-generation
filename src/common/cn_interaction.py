@@ -6,6 +6,7 @@ import urllib.parse
 import fcntl
 import socket
 import struct
+import json
 
 # Get the IP list of the CN components
 file_path = "./src/const/plateform_free5gc.yaml"
@@ -52,8 +53,10 @@ def request_cn(nf,data,method,uri,headers={},token="",display=True):
                 query_string = urllib.parse.urlencode(data, doseq=True)
                 url += f"?{query_string}"
             response = client.request(method, url, headers=base_headers)
-        else:
+        elif method == "POST":
             response = client.request(method, url, data=data, headers=base_headers)
+        else :
+            response = client.request(method, url, json=data, headers=base_headers)
 
 
     try    : result = response.json()
