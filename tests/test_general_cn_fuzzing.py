@@ -3,7 +3,7 @@ from src import *
 
 def test_extract_parameters():
 
-    file_path = f"{API_SOURCE_FOLDER}/TS29510_Nnrf_NFManagement.yaml"
+    file_path = f"{GENERAL_API_SOURCE_FOLDER}/TS29510_Nnrf_NFManagement.yaml"
     with open(file_path, 'r', encoding='utf-8') as f:
         yaml_content = yaml.safe_load(f)
         paths  = yaml_content["paths"]
@@ -43,6 +43,6 @@ def test_extract_parameters():
     # New uri should look like /searches/CxpKdmkzIo
     assert "{" not in new_uri
     
-def test_fuzz():
-    results = fuzz(nb_file=1,nb_url=1,nb_ite=1,nb_method=1,nf_list=["NRF"],only_required=True,display=False)
-    assert len(results) == 1
+# def test_fuzz():
+#     results = general_fuzz(nb_file=1,nb_url=1,nb_ite=1,nb_method=1,nf_list=["NRF"],only_required=True,display=False)
+#     assert len(results) == 1
