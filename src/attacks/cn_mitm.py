@@ -5,6 +5,8 @@ import httpx
 from h2.events import *
 import json
 
+from src import ip_list
+
 class H2ProxyServer:
     def __init__(self, host, port, target_host, display=False):
         self.host = host
@@ -102,10 +104,10 @@ class H2ProxyServer:
         async with server:
             await server.serve_forever()
 
-def start_mitm():
+def start_mitm(nf_to_replace):
     # Initialize and start the proxy server
-    proxy = H2ProxyServer(host='0.0.0.0', port=8000, target_host='10.100.200.10', display=True)
+    proxy = H2ProxyServer(host='0.0.0.0', port=8000, target_host=nf_to_replace, display=True)
     asyncio.run(proxy.run())
 
 if __name__ == '__main__':
-    start_mitm()
+    start_mitm(nf_to_replace = ip_list['UDM']) # udm
