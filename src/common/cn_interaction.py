@@ -8,10 +8,7 @@ import socket
 import struct
 import json
 
-# Get the IP list of the CN components
-file_path = "./src/const/plateform_free5gc.yaml"
-with open(file_path, 'r', encoding='utf-8') as file:
-    ip_list = yaml.safe_load(file)["addresses"]
+from src import ip_list
 
 def get_my_ip_linux(interface: str) -> str:
     """
@@ -72,11 +69,9 @@ def request_cn(nf,data,method,uri,headers={},token="",display=True):
 
     return response.status_code, result
 
-# OK
 def ping_nf(nf, display=True):
     return request_cn(nf, {}, "GET","", display=display)
 
-# OK
 def add_nf(nf_instance_id, nf_type, nf_services=[], ip_address = "", display=True):
   
   if not ip_address : ip_address = get_my_ip_linux("br-free5gc") # outside of dockers 
@@ -120,13 +115,11 @@ def add_nf(nf_instance_id, nf_type, nf_services=[], ip_address = "", display=Tru
       display=display
   )
 
-# OK
 def remove_nf(nf_instance_id, token, display=True):
     # curl -s -o /dev/null -w "\n\nHTTP Status Code: %{http_code}\n\n" -X DELETE http://127.0.0.10:8000/nnrf-nfm/v1/nf-instances/$fakeAMF
     uri = f"/nnrf-nfm/v1/nf-instances/{nf_instance_id}"
     return request_cn("NRF", {}, "DELETE", uri, token=token,display=display)
 
-# OK
 def get_token(nf_instance_id, nf_type, scope, target_type, display=True):
     data = {
         "grant_type": "client_credentials",
@@ -138,7 +131,6 @@ def get_token(nf_instance_id, nf_type, scope, target_type, display=True):
     status, token = request_cn("NRF", data, "POST", f"/oauth2/token", display=display)
     return token["access_token"]
 
-# OK
-def setup_rogue(nf_instance_id=generate_variables("uuid"), nf_type = "AMF", scope="nnrf-disc", target_type = "NRF"):
-    add_nf(nf_instance_id, nf_type, display=False)
-    return get_token(nf_instance_id, nf_type, scope, target_type, display=False)
+def setup_rogue(nf_instance_id=generate_variables("uuid"), nf_type = "AMF", scope="nnrf-disc", target_type = "NRF", display=False):
+    add_nf(nf_instance_id, nf_type, display=display)
+    return get_token(nf_instance_id, nf_type, scope, target_type, display=display)
