@@ -72,7 +72,7 @@ def request_cn(nf,data,method,uri,headers={},token="",display=True):
 def ping_nf(nf, display=True):
     return request_cn(nf, {}, "GET","", display=display)
 
-def add_nf(nf_instance_id, nf_type, nf_services=[], ip_address = "", display=True):
+def add_nf(nf_instance_id, nf_type, nf_services=[], ip_address = "", additionnal_data={}, display=True):
   
   if not ip_address : ip_address = get_my_ip_linux("br-free5gc") # outside of dockers 
   if not ip_address : ip_address = get_my_ip_linux("eth0") # inside of a docker
@@ -86,6 +86,7 @@ def add_nf(nf_instance_id, nf_type, nf_services=[], ip_address = "", display=Tru
       ],
       "nfServices" : []
   }
+  data = {**data, **additionnal_data}
   
   for i,nf_service in enumerate(nf_services):
       data["nfServices"].append({
@@ -120,7 +121,7 @@ def remove_nf(nf_instance_id, token, display=True):
     uri = f"/nnrf-nfm/v1/nf-instances/{nf_instance_id}"
     return request_cn("NRF", {}, "DELETE", uri, token=token,display=display)
 
-def get_token(nf_instance_id, nf_type, scope, target_type, display=True):
+def get_token(nf_instance_id, nf_type, scope, target_type, additionnal_data={}, display=True):
     data = {
         "grant_type": "client_credentials",
         "nfInstanceId": nf_instance_id,
@@ -128,6 +129,7 @@ def get_token(nf_instance_id, nf_type, scope, target_type, display=True):
         "scope": scope,
         "targetNfType" : target_type
     }
+    data = {**data, **additionnal_data}
     status, token = request_cn("NRF", data, "POST", f"/oauth2/token", display=display)
     return token["access_token"]
 
