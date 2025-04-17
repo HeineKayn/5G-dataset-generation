@@ -11,23 +11,34 @@ node_id = IE_NodeId(id_type=0, ipv4=EVIL_ADDR)
 cp_f_seid = IE_FSEID(seid=seid, v4=1, ipv4=EVIL_ADDR)
 
 create_far = IE_CreateFAR(
-    far_id=1,
-    apply_action=IE_ApplyAction(FORW=1),
-    forward_parameters=IE_ForwardingParameters(
-        IE_list=[
-            IE_DestinationInterface(interface=1)
-        ]
-)
+    IE_list=[
+        IE_FAR_Id(id=1),
+        IE_ApplyAction(FORW=1),
+        IE_ForwardingParameters(
+            IE_list=[
+                IE_DestinationInterface(interface=1) 
+            ]
+        ),
+    ]
+
 )
 
 create_pdr = IE_CreatePDR(
-    pdr_id=1,
-    precedence=255,
-    pdi=IE_PDI(
-        source_interface=1,
-        local_f_teid=IE_FTEID(teid=0x11111111, ipv4=UPF_ADDR)
-    ),
-    far_id=1
+    IE_list=[
+        IE_PDR_Id(id=1),
+        IE_Precedence(precedence=255),
+        IE_PDI(
+            IE_list=[
+                IE_SourceInterface(interface=1),
+                IE_FTEID(         # not sure if this is correct
+                    teid=0x11111111,
+                    ipv4=UPF_ADDR
+                ),
+                
+            ]
+        ),
+        IE_FAR_Id(id=1),
+    ]
 )
 
 pfcp_msg = PFCP(
