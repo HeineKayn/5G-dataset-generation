@@ -58,7 +58,8 @@ def send_pfcp_session_establishment_req():
                     IE_SourceInterface(interface=1),
                     IE_FTEID(         # not sure if this is correct
                         TEID=0x11111111,
-                        ipv4=UPF_ADDR,
+                        #ipv4=UPF_ADDR,
+                        ipv4="1.1.1.1",
                         V4=1,
                     ),
                     
@@ -71,7 +72,7 @@ def send_pfcp_session_establishment_req():
     pfcp_msg = PFCP(
         version=1,
         message_type=50,
-        seid=0,
+        seid=seid,
         seq=seq
     )/node_id/cp_f_seid/create_pdr/create_far
 
