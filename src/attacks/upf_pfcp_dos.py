@@ -13,7 +13,11 @@ cp_f_seid = IE_FSEID(seid=seid, v4=1, ipv4=EVIL_ADDR)
 create_far = IE_CreateFAR(
     far_id=1,
     apply_action=IE_ApplyAction(FORW=1),
-    forward_parameters=IE_ForwardingParameters(destination_interface=1)
+    forward_parameters=IE_ForwardingParameters(
+        IE_list=[
+            IE_DestinationInterface(interface=1)
+        ]
+)
 )
 
 create_pdr = IE_CreatePDR(
