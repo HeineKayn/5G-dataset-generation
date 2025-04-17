@@ -48,7 +48,7 @@ def send_pfcp_session_establishment_req(seid=0xC0FFEE):
         IE_Precedence(precedence=255),
         IE_PDI(IE_list=[
             IE_SourceInterface(interface=1),
-            IE_NetworkInstance(instance=network_instance),
+            #IE_NetworkInstance(instance=network_instance),
             IE_FTEID(TEID=teid, V4=1, ipv4=ue_ip)
         ]),
         IE_FAR_Id(id=1)
@@ -57,9 +57,9 @@ def send_pfcp_session_establishment_req(seid=0xC0FFEE):
     ie_createfar = Raw(bytes(IE_CreateFAR(IE_list=[
         IE_FAR_Id(id=1),
         IE_ApplyAction(FORW=1),
-        IE_ForwardingParameters(IE_list=[
-            IE_DestinationInterface(interface=1)
-        ])
+        #IE_ForwardingParameters(IE_list=[
+        #    IE_DestinationInterface(interface=1)
+        #])
     ])))
 
     pfcp_msg = PFCP(
