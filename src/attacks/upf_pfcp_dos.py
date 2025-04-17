@@ -94,7 +94,7 @@ def send_pfcp_session_establishment_test():
     teid=0x11111111
     ue_ip="1.1.1.1"
     network_instance="internet"
-    seq = int(time.time()) % 256
+
 
     pfcp_msg = PFCP(
         version=1,
