@@ -19,6 +19,7 @@ def send_pfcp_association_setup_req():
         version=1,
         message_type=5,
         seid=0,
+        S=0,
         seq=seq
     )/node_id/recovery_timestamp
 
