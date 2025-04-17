@@ -90,26 +90,19 @@ def send_pfcp_session_establishment_req():
 
 def send_pfcp_session_establishment_test():
     global seq
-    src_ip="10.100.200.66"
-    dst_ip="10.100.200.2"
-    seid=0xC0FFEE
-    sport=8805
-    dport=8805
-    teid=0x11111111
-    ue_ip="1.1.1.1"
-    network_instance="internet"
+    src_ip = "10.100.200.66"
+    dst_ip = "10.100.200.2"
+    seid = 0xC0FFEE
+    sport = 8805
+    dport = 8805
+    teid = 0x11111111
+    ue_ip = "1.1.1.1"
+    network_instance = "internet"
 
+    ie_nodeid = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_ip)))
+    ie_fseid = Raw(bytes(IE_FSEID(seid=seid, v4=1, ipv4=src_ip)))
 
-    pfcp_msg = PFCP(
-        version=1,
-        message_type=50,
-        seid=0,
-        S=1,
-        seq=seq
-    ) / \
-    IE_NodeId(id_type=0, ipv4=src_ip) / \
-    IE_FSEID(seid=seid, v4=1, ipv4=src_ip) / \
-    IE_CreatePDR(IE_list=[
+    ie_createpdr = Raw(bytes(IE_CreatePDR(IE_list=[
         IE_PDR_Id(id=1),
         IE_Precedence(precedence=255),
         IE_PDI(IE_list=[
@@ -118,17 +111,27 @@ def send_pfcp_session_establishment_test():
             IE_FTEID(TEID=teid, V4=1, ipv4=ue_ip)
         ]),
         IE_FAR_Id(id=1)
-    ]) / \
-    IE_CreateFAR(IE_list=[
+    ])))
+
+    ie_createfar = Raw(bytes(IE_CreateFAR(IE_list=[
         IE_FAR_Id(id=1),
         IE_ApplyAction(FORW=1),
         IE_ForwardingParameters(IE_list=[
             IE_DestinationInterface(interface=1)
         ])
-    ])
+    ])))
 
-    pkt = IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport)/pfcp_msg
-    pkt = pkt.__class__(bytes(pkt))
+    pfcp_msg = PFCP(
+        version=1,
+        message_type=50,
+        seid=0,
+        S=1,
+        seq=seq
+    ) / ie_nodeid / ie_fseid / ie_createpdr / ie_createfar
+
+    pkt = IP(src=src_ip, dst=dst_ip) / UDP(sport=sport, dport=dport) / pfcp_msg
+    pkt = pkt.__class__(bytes(pkt))  # Recalcul final
+
     print(f"Sending PFCP Session Establishment Request Test")
     pkt.show()
     send(pkt)
