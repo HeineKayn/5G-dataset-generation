@@ -31,7 +31,7 @@ create_pdr = IE_CreatePDR(
             IE_list=[
                 IE_SourceInterface(interface=1),
                 IE_FTEID(         # not sure if this is correct
-                    teid=0x11111111,
+                    TEID=0x11111111,
                     ipv4=UPF_ADDR
                 ),
                 
