@@ -83,6 +83,52 @@ def send_pfcp_session_establishment_req():
 
 
 
+
+def send_pfcp_session_establishment_test():
+    src_ip="10.100.200.66"
+    dst_ip="10.100.200.2"
+    seid=0xC0FFEE
+    sport=8805
+    dport=8805
+    teid=0x11111111
+    ue_ip="1.1.1.1"
+    network_instance="internet"
+    seq = int(time.time()) % 256
+
+    pfcp_msg = PFCP(
+        version=1,
+        message_type=50,
+        seid=seid,
+        seq=seq
+    ) / \
+    IE_NodeId(id_type=0, ipv4=src_ip) / \
+    IE_FSEID(seid=seid, v4=1, ipv4=src_ip) / \
+    IE_CreatePDR(IE_list=[
+        IE_PDR_Id(id=1),
+        IE_Precedence(precedence=255),
+        IE_PDI(IE_list=[
+            IE_SourceInterface(interface=1),
+            IE_NetworkInstance(instance=network_instance),
+            IE_FTEID(TEID=teid, V4=1, ipv4=ue_ip)
+        ]),
+        IE_FAR_Id(id=1)
+    ]) / \
+    IE_CreateFAR(IE_list=[
+        IE_FAR_Id(id=1),
+        IE_ApplyAction(FORW=1),
+        IE_ForwardingParameters(IE_list=[
+            IE_DestinationInterface(interface=1)
+        ])
+    ])
+
+    pkt = IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport)/pfcp_msg
+
+    print(f"Sending PFCP Session Establishment Request Test")
+    pkt.show()
+    send(pkt)
+    print("Packet sent.")
+
+
 send_pfcp_association_setup_req()
 time.sleep(0.5)
-send_pfcp_session_establishment_req()
+send_pfcp_session_establishment_test()
