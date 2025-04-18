@@ -137,7 +137,7 @@ class PFCPDosAttack:
         self.verbose = False
         
     def new_ue_addr(self):
-        next_ip = self.ue_base_ip + self._ue_counter
+        next_ip = self.ue_base_addr + self._ue_counter
         self._ue_counter += 1
         return str(next_ip)
         
