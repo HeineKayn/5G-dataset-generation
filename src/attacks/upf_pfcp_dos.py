@@ -177,6 +177,7 @@ class PFCPDosAttack:
         self.verbose = verbose
         self.prepare = prepare
         self.randomize = randomize
+        self.lock = threading.Lock()
         
     def set_radomize(self, randomize=True):
         self.randomize = randomize
@@ -210,15 +211,16 @@ class PFCPDosAttack:
         return str(next_ip)
     
     def new_seq(self):
-        if self.randomize:
-            self.seq = random.randint(1, 0xFFFFFFFF)
-            return self.seq
+        # if self.randomize:
+        #     self.seq = random.randint(1, 0xFFFFFFFF)
+        #     return self.seq
         
-        seq = self.seq
-        self.seq += 1
-        if self.seq > 0xFFFFFFFF:
-            self.seq = 1
-        return seq
+        with self.lock:
+            seq = self.seq
+            self.seq += 1
+            if self.seq > 0xFFFFFFFF:
+                self.seq = 1
+            return seq
     
     def new_seid(self):
         if self.randomize:
