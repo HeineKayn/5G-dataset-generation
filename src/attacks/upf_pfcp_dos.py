@@ -202,6 +202,9 @@ class PFCPDosAttack:
             print("[DoS]Verbose mode disabled")
     
     def new_ue_addr(self):
+        if self.randomize:
+            return ".".join(str(random.randint(1, 254)) for _ in range(4))
+
         next_ip = self.ue_base_addr + self._ue_counter
         self._ue_counter += 1
         return str(next_ip)
