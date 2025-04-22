@@ -211,9 +211,9 @@ class PFCPDosAttack:
         return str(next_ip)
     
     def new_seq(self):
-        # if self.randomize:
-        #     self.seq = random.randint(1, 0xFFFFFFFF)
-        #     return self.seq
+        if self.randomize:
+            seqNbr = random.randint(1, 0xFFFFFFFF)
+            return seqNbr
         
         with self.lock:
             seq = self.seq
