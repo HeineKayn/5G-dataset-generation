@@ -326,7 +326,7 @@ class PFCPDosAttack:
                     ue_addr=self.new_ue_addr(),
                     teid=self.new_teid(),
                     random_seq=self.randomize,
-                    random_far_number=29
+                    random_far_number=self.random_far_number
                 )
                 
             
