@@ -63,7 +63,7 @@ class Ez_PFCP:
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
-        seq = self.new_seq()
+        seq = self.new_seq(randomize=random_seq)
         
         
         ie_nodeid = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
