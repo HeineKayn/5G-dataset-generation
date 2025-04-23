@@ -22,7 +22,10 @@ class Ez_PFCP:
         
         
         
-    def new_seq(self):
+    def new_seq(self, randomize=False):
+        if randomize:
+            seqNbr = random.randint(1, 0xFFFFFFFF)
+            return seqNbr
         seq = self.seq
         self.seq += 1
         if self.seq > 0xFFFFFFFF:
@@ -54,7 +57,7 @@ class Ez_PFCP:
         return packet
     
     def Build_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1):
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
