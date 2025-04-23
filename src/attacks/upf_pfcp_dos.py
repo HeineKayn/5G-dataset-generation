@@ -339,10 +339,10 @@ class PFCPDosAttack:
         thread_offset = 0
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
-            t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count, offset))
+            t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count, thread_offset))
             t.start()
             threads.append(t)
-            offset += count
+            thread_offset += count
 
         for t in threads:
             t.join()
