@@ -295,6 +295,7 @@ class PFCPDosAttack:
             now = time.time()
             if now - last_update >= 5:
                 percent = (i + 1)* 100 // count
+                last_update = now
                 print(f"[DoS] Progress: {percent}% ({i+1}/{count})")
         print(f"[DoS] Prepared the PFCP association setup packet")
         print(f"[DoS] Prepared {count} PFCP session establishment packets")
