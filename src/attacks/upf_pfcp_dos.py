@@ -285,9 +285,7 @@ class Ez_PFCP:
             return
         
         res = sr1(req)
-        if res:
-            res.show()
-        else: 
+        if not res:
             print("[EZ-PFCP] No response received for PFCP session deletion request")
         
         pfcp_cause = None
