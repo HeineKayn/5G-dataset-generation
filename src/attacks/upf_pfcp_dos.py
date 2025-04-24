@@ -292,7 +292,7 @@ class Ez_PFCP:
         
         pfcp_cause = None
         
-        for ie in res[PFCPSessionDeletionRequest].IE_list:
+        for ie in res[PFCP].IE_list:
             if isinstance(ie, IE_Cause):
                 pfcp_cause = ie.cause
                 break
