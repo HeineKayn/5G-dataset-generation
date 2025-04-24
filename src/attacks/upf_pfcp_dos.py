@@ -290,6 +290,15 @@ class Ez_PFCP:
         else: 
             print("[EZ-PFCP] No response received for PFCP session deletion request")
         
+        pfcp_cause = None
+        
+        for ie in res[PFCPSessionDeletionRequest].IE_list:
+            if isinstance(ie, IE_Cause):
+                pfcp_cause = ie.cause
+                break
+        
+        print(f"[EZ-PFCP] PFCP Session Deletion response received with cause: {pfcp_cause}")
+        
 
         
         
