@@ -271,7 +271,7 @@ class Ez_PFCP:
         if dest_port is None:
             print("[EZ-PFCP] Error: No destination port provided. Expected a valid port number (e.g., 8805).")
             return
-        print("[[[{seid}]]]")
+
         req = self.Build_PFCP_session_deletion_req(
                 seid=seid,
                 src_addr=src_addr,
