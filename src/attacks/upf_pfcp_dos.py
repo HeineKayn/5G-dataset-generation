@@ -134,6 +134,7 @@ class Ez_PFCP:
 
 
     def Build_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+        print(f"#### {seid} ####")
         seid = seid or self.seid
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
@@ -149,7 +150,7 @@ class Ez_PFCP:
         if self.verbose:
             print(f"[EZ-PFCP] Sending PFCP session deletion packet to {dest_addr} with SEID {seid}")
         
-        
+        print(f"____ {seid} ____")
         
         node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
 
@@ -272,7 +273,7 @@ class Ez_PFCP:
         if dest_port is None:
             print("[EZ-PFCP] Error: No destination port provided. Expected a valid port number (e.g., 8805).")
             return
-
+        print("[[[{seid}]]]")
         req = self.Build_PFCP_session_deletion_req(
                 seid=seid,
                 src_addr=src_addr,
