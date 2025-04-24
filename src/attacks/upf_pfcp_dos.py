@@ -484,7 +484,7 @@ class PFCPDosAttack:
 
                     
                 if response == self.REQUEST_ACCEPTED:
-                    print(f"[DoS][Worker] PFCP session deletion request accepted; SEID: {i}")
+                    print(f"[DoS][Worker] PFCP session deletion request accepted; SEID: {hex(i+1)}")
                     
             except Exception as e:
                 print(f"[DoS][Worker] Error sending PFCP session deletion request: {e}") 
