@@ -467,7 +467,7 @@ class Ez_PFCP:
             
         )
         if use_sendpfast:
-            sendpfast( Ether() /pfcp_session_establishment_req, iface=net_interface, mbps=10000)
+            sendpfast( Ether() /pfcp_session_establishment_req, iface=net_interface, mbps=0)
         else:
             send(pfcp_session_establishment_req)
         if self.verbose:
