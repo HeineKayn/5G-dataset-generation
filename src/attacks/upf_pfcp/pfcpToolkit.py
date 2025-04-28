@@ -316,7 +316,7 @@ class PFCPToolkit:
         return packet
     
     
-    def Build_PFCP_session_modification_req(self, seid, far_id, update_ie=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+    def Build_PFCP_session_modification_req(self, seid, far_id, update_ie=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action="FORW"):
         """
         Build a PFCP Session Modification Request packet.
 
@@ -329,7 +329,7 @@ class PFCPToolkit:
             dest_addr (str, optional): Destination IPv4 address (typically the UPF). Defaults to instance's dest_addr.
             src_port (int, optional): UDP source port for sending the PFCP message. Defaults to instance's src_port.
             dest_port (int, optional): UDP destination port for the PFCP message. Defaults to instance's dest_port.
-
+            apply_action (str, optional): Action to apply to the FAR (e.g., "FORW"). Defaults to "FORW".
         Returns:
             scapy.packet.Packet: The constructed PFCP Session Modification Request packet ready for transmission.
         """
@@ -353,9 +353,14 @@ class PFCPToolkit:
             return 
         
 
-        
-       
-        update_ie = update_ie or self.Update_FAR(far_id)
+        update_ie = None
+        apply_action = apply_action.upper()
+        if apply_action == "FORW":
+           update_ie = update_ie or self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(FORW=1))
+        if apply_action == "DROP":
+            update_ie = update_ie or self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DROP=1))
+        if apply_action == "DUPL":
+            update_ie = update_ie or self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DUPL=1))
         
         
         packet = PFCP(
