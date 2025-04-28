@@ -1,4 +1,4 @@
-from upf_pfcp.pfcpDosAttack import PFCPDosAttack
+from pfcpDosAttack import PFCPDosAttack
 
 EVIL_ADDR = "10.100.200.66" 
 UPF_ADDR  = "10.100.200.2"
