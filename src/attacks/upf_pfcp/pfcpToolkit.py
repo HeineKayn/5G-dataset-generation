@@ -316,7 +316,7 @@ class PFCPToolkit:
         return packet
     
     
-    def Build_PFCP_session_modification_req(self, seid, far_id, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action="FORW"):
+    def Build_PFCP_session_modification_req(self, seid, far_id, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"]):
         """
         Build a PFCP Session Modification Request packet.
 
@@ -327,17 +327,17 @@ class PFCPToolkit:
             dest_addr (str, optional): Destination IPv4 address (typically the UPF). Defaults to instance's dest_addr.
             src_port (int, optional): UDP source port for sending the PFCP message. Defaults to instance's src_port.
             dest_port (int, optional): UDP destination port for the PFCP message. Defaults to instance's dest_port.
-            apply_action (str, optional): Action to apply to the FAR (e.g., "FORW"). Defaults to "FORW".
+            apply_action (list or str, optional): Actions to apply to the FAR (e.g., ["FORW", "DUPL"]). Defaults to ["FORW"].
+
         Returns:
             scapy.packet.Packet: The constructed PFCP Session Modification Request packet ready for transmission.
         """
-
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
-        
+
         if not self.paramsHandler.check_parameters({
             "src_addr": src_addr,
             "dest_addr": dest_addr,
@@ -345,22 +345,32 @@ class PFCPToolkit:
             "dest_port": dest_port,
             "seid": seid,
             "far_id": far_id,
-
-            
         }, "[Build_PFCP_session_modification_req]"):
-            return 
-        
+            return
 
-        update_ie = None
-        apply_action = apply_action.upper()
-        if apply_action == "FORW":
-           update_ie = self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(FORW=1))
-        if apply_action == "DROP":
-            update_ie = self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DROP=1))
-        if apply_action == "DUPL":
-            update_ie = self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DUPL=1))
-        
-        
+        # Si une seule action est passée sous forme de string, on la convertit en liste
+        if isinstance(apply_action, str):
+            apply_action = [apply_action]
+
+        # On prépare dynamiquement le dictionnaire des flags
+        action_flags = {
+            "FORW": 0,
+            "DROP": 0,
+            "BUFFER": 0,
+            "NOCP": 0,
+            "DUPL": 0
+        }
+
+        for action in apply_action:
+            action = action.upper()
+            if action in action_flags:
+                action_flags[action] = 1
+            else:
+                self.logger.error(f"Unknown apply action: {action}")
+
+        apply_action_ie = IE_ApplyAction(**action_flags)
+        update_ie = self.Update_FAR(far_id, apply_action_ie=apply_action_ie)
+
         packet = PFCP(
             version=1,
             message_type=52,
@@ -368,12 +378,10 @@ class PFCPToolkit:
             seid=seid,
             seq=self.new_seq(True)
         ) / update_ie
+
         packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / packet
         packet = packet.__class__(bytes(packet))
         return packet
-
-    
-    
 
 
     def Send_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
