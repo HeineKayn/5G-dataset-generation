@@ -1,4 +1,4 @@
-from scapy.all import send, sendpfast, sr1, Ether, IP, UDP, conf
+from scapy.all import send, sendp, sr1, Ether, IP, UDP, conf
 from scapy.contrib.pfcp import *
 import time, random, ipaddress, threading
 
@@ -427,7 +427,7 @@ class Ez_PFCP:
             
             
     def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0, net_interface="eth0", use_sendpfast=False):
+                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0, net_interface="eth0", use_sendp=False):
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
@@ -466,8 +466,8 @@ class Ez_PFCP:
             random_far_number=random_far_number
             
         )
-        if use_sendpfast:
-            sendpfast( Ether() /pfcp_session_establishment_req, iface=net_interface, mbps=0)
+        if use_sendp:
+            sendp( Ether() /pfcp_session_establishment_req, iface=net_interface, mbps=0)
         else:
             send(pfcp_session_establishment_req)
         if self.verbose:
@@ -726,7 +726,7 @@ class PFCPDosAttack:
                         random_seq=self.randomize,
                         random_far_number=self.random_far_number,
                         net_interface=self.interface,
-                        use_sendpfast=True
+                        use_sendp=True
                     )
                 except Exception as e:
                     worker_logger.error(f"Error sending PFCP session establishment request: {e}")
