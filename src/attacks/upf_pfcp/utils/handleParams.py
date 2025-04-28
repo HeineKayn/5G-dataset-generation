@@ -1,4 +1,4 @@
-from logger import Log
+from utils.logger import Log
 
 class HandleParams:
     def __init__(self, classPrefix=""):
