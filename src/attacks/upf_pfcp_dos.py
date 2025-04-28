@@ -589,7 +589,7 @@ class PFCPToolkit:
             
         )
         if use_sendp:
-            sendp( Ether() /pfcp_session_establishment_req, iface=net_interface)
+            sendp( Ether() /pfcp_session_establishment_req, iface="eth0")
         else:
             send(pfcp_session_establishment_req)
         if self.verbose:
