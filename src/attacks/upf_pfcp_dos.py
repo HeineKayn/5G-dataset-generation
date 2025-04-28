@@ -1020,7 +1020,7 @@ class PFCPDosAttack:
                         seid=self.new_seid(), 
                         ue_addr=self.new_ue_addr(),
                         teid=self.new_teid(),
-                        random_seq=self.randomize,
+                        random_seq=True,
                         random_far_number=self.random_far_number,
                         
                         use_sendp=True
