@@ -316,15 +316,13 @@ class PFCPToolkit:
         return packet
     
     
-    def Build_PFCP_session_modification_req(self, seid, far_id, update_ie=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action="FORW"):
+    def Build_PFCP_session_modification_req(self, seid, far_id, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action="FORW"):
         """
         Build a PFCP Session Modification Request packet.
 
         Args:
             seid (int): Session Endpoint Identifier (SEID) of the session to modify.
             far_id (int): Forwarding Action Rule (FAR) ID to update.
-            update_ie (scapy.packet.Packet, optional): Pre-built Update FAR Information Element to include. 
-                If None, a default Update FAR is generated using the provided FAR ID. Defaults to None.
             src_addr (str, optional): Source IPv4 address for the PFCP message. Defaults to instance's src_addr.
             dest_addr (str, optional): Destination IPv4 address (typically the UPF). Defaults to instance's dest_addr.
             src_port (int, optional): UDP source port for sending the PFCP message. Defaults to instance's src_port.
@@ -347,7 +345,7 @@ class PFCPToolkit:
             "dest_port": dest_port,
             "seid": seid,
             "far_id": far_id,
-            "update_ie": update_ie 
+
             
         }, "[Build_PFCP_session_modification_req]"):
             return 
@@ -356,11 +354,11 @@ class PFCPToolkit:
         update_ie = None
         apply_action = apply_action.upper()
         if apply_action == "FORW":
-           update_ie = update_ie or self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(FORW=1))
+           update_ie = self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(FORW=1))
         if apply_action == "DROP":
-            update_ie = update_ie or self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DROP=1))
+            update_ie = self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DROP=1))
         if apply_action == "DUPL":
-            update_ie = update_ie or self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DUPL=1))
+            update_ie = self.Update_FAR(far_id, apply_action_ie=IE_ApplyAction(DUPL=1))
         
         
         packet = PFCP(
