@@ -1022,7 +1022,7 @@ class PFCPDosAttack:
                         teid=self.new_teid(),
                         random_seq=self.randomize,
                         random_far_number=self.random_far_number,
-                        net_interface=self.interface,
+                        
                         use_sendp=True
                     )
                 except Exception as e:
