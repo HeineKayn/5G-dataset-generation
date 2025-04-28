@@ -1,4 +1,4 @@
-from scapy.all import send, sendpfast, sr1, IP, UDP, conf
+from scapy.all import send, sendpfast, sr1, Ether, IP, UDP, conf
 from scapy.contrib.pfcp import *
 import time, random, ipaddress, threading
 
@@ -467,7 +467,7 @@ class Ez_PFCP:
             
         )
         if use_sendpfast:
-            sendpfast(pfcp_session_establishment_req, iface=net_interface, mbps=10000)
+            sendpfast( Ether() /pfcp_session_establishment_req, iface=net_interface, mbps=10000)
         else:
             send(pfcp_session_establishment_req)
         if self.verbose:
