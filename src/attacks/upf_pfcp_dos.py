@@ -726,7 +726,7 @@ class PFCPDosAttack:
                         random_seq=self.randomize,
                         random_far_number=self.random_far_number,
                         net_interface=self.interface,
-                        use_sendpfast=True
+                        use_sendpfast=False
                     )
                 except Exception as e:
                     worker_logger.error(f"Error sending PFCP session establishment request: {e}")
