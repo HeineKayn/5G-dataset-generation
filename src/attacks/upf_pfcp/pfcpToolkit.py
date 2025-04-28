@@ -366,7 +366,7 @@ class PFCPToolkit:
             message_type=52,
             S=1,
             seid=seid,
-            seq=1
+            seq=self.new_seq(True)
         ) / update_ie
         packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / packet
         packet = packet.__class__(bytes(packet))
