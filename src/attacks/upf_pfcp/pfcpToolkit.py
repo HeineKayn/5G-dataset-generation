@@ -101,7 +101,7 @@ class PFCPToolkit:
             ]
         )
         
-    def Update_FAR(far_id, apply_action_ie=IE_ApplyAction(FORW=1)):
+    def Update_FAR(self, far_id, apply_action_ie=IE_ApplyAction(FORW=1)):
         """
         Create a raw Update FAR (Forwarding Action Rule) Information Element for PFCP messages.
 
