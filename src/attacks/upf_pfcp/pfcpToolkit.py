@@ -356,7 +356,7 @@ class PFCPToolkit:
         action_flags = {
             "FORW": 0,
             "DROP": 0,
-            "BUFFER": 0,
+            "BUFF": 0,
             "NOCP": 0,
             "DUPL": 0
         }
