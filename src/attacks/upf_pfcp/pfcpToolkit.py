@@ -42,7 +42,7 @@ class PFCPToolkit:
         self.verbose = verbose
         self.seid=None
         
-        self.classPrefix = "[EZ-PFCP]"
+        self.classPrefix = "[PFCP-TLKT]"
         self.logger = Log(self.classPrefix)
         
         self.paramsHandler = HandleParams(self.classPrefix)
