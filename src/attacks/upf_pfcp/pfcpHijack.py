@@ -51,13 +51,14 @@ class PFCPHijack:
             src_addr=hijacker_addr,
             dest_addr=upf_addr,
             src_port=src_port,
-            dest_port=dest_port
+            dest_port=dest_port,
+            verbose=self.verbose
         )
         
         
     
         PFCPFuzzer_obj = PFCPFuzzer()
-        PFCPFuzzer_obj.set_verbose(self.verbose)
+
         valid_farids = PFCPFuzzer_obj.Start_PFCP_FARID_fuzzing(
             upf_addr=upf_addr,
             src_addr=hijacker_addr,
@@ -69,7 +70,7 @@ class PFCPHijack:
         )
         
         
-        PFCPToolkit_obj.verbose(self.verbose)
+        PFCPToolkit_obj.set_verbose(self.verbose)
         teid = random.randint(1, 100000)
         for seid, farid_list in valid_farids.items():
             self.logger.info(f"Valid FAR IDs for SEID {seid}:")
