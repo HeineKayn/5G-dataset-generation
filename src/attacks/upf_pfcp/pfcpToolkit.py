@@ -404,6 +404,15 @@ class PFCPToolkit:
                 
             ]
         )
+        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0:
+            ie_update_far = IE_UpdateFAR(
+            IE_list=[
+                IE_FAR_Id(id=far_id),
+                apply_action_ie,
+            
+                
+            ]
+            )
         
         ie_update_far = Raw(bytes(ie_update_far))
         update_ie = ie_update_far
