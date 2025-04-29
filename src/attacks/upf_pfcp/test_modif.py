@@ -187,11 +187,11 @@ NET_IFACE= "eth0"
 
 conf.verb = 0
 PFCPToolkit_obj = PFCPToolkit(
-    evil_addr=EVIL_ADDR,
-    upf_addr=UPF_ADDR,
+    src_addr=EVIL_ADDR,
+    dest_addr=UPF_ADDR,
     src_port=SRC_PORT,
     dest_port=DEST_PORT,
-    net_iface=NET_IFACE,
+,
     verbose=True
 )
 for seid in range(1,10):
