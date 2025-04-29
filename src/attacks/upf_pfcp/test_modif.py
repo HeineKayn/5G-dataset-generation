@@ -18,6 +18,16 @@ SRC_PORT = 8805
 NET_IFACE= "eth0"
 
 
+def new_ue_addr(randomize=False):
+    """
+    Generate a completely random IPv4 address.
+
+    Returns:
+        str: The generated random IPv4 address as a string.
+    """
+    
+    return f"{random.randint(1, 254)}.{random.randint(1, 254)}.{random.randint(1, 254)}.{random.randint(1, 254)}"
+
 def new_seq(randomize=False):
     """
     Generate a new PFCP sequence number.
@@ -114,7 +124,7 @@ def Build_PFCP_session_modification_req(seid, far_id, src_addr=None, dest_addr=N
                 IE_OuterHeaderCreation(
                 GTPUUDPIPV4=1,
                 TEID=new_teid(randomize=True),
-                ipv4="10.0.0.55",
+                ipv4=new_ue_addr(randomize=True),
                 port=2152 
                 ),
                 
