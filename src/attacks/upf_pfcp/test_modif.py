@@ -212,10 +212,12 @@ NET_IFACE= "eth0"
        
 PFCPFuzzer_obj = PFCPFuzzer()
 PFCPFuzzer_obj.set_verbose(True)
-PFCPFuzzer_obj.Start_PFCP_SEID_fuzzing(
+ma_liste = PFCPFuzzer_obj.Start_PFCP_SEID_fuzzing(
     upf_addr=UPF_ADDR,
     src_addr=EVIL_ADDR,
     max_seid=10,
     src_port=SRC_PORT,
     dest_port=DEST_PORT
 )
+
+print(ma_liste)

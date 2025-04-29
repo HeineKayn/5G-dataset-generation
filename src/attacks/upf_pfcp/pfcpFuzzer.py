@@ -26,7 +26,7 @@ class PFCPFuzzer:
         """
         self.verbose = verbose
         
-    def Start_PFCP_SEID_fuzzing(self, upf_addr, src_addr, max_seid=10000, src_port=None, dest_port=None):
+    def Start_PFCP_SEID_fuzzing(self, upf_addr, src_addr, max_seid=10000, max_far_discover=100,src_port=None, dest_port=None):
         """
         Start PFCP SEID fuzzing
         """
@@ -47,26 +47,39 @@ class PFCPFuzzer:
         )
         
         valid_seid_list = list()
+        far_id = 1
         
+        self.logger.info(f"Starting PFCP SEID fuzzing on {upf_addr} with max_seid: {max_seid} and max_far_discover: {max_far_discover}")
         for seid in range (1, max_seid):
             
 
             
             
-            packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=555)
-            packet.show()
+            packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=far_id)
+            
             res = sr1(packet)
             
             pfcp_cause = None
             for ie in res[PFCP].IE_list:
                 if isinstance(ie, IE_Cause):
                     pfcp_cause = ie.cause
-                    self.logger.info(f"PFCP Cause: {pfcp_cause}")
                     break
             
             if pfcp_cause == 1:
                 self.logger.success(f"Discovered SEID: {hex(seid)}")
                 valid_seid_list.append(seid)
+            elif pfcp_cause == 65:
+                # in case the far_id is not incremented from 1
+                if far_id >= max_far_discover:
+                    far_id = 0
+                    
+                far_id += 1
+        
+        if self.verbose:
+            self.logger.success(f"Fuzzing completed, {len(valid_seid_list)} SEIDs discovered")
+        return valid_seid_list
+
+
                 
           
             
