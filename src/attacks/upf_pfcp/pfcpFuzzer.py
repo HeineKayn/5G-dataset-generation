@@ -53,7 +53,7 @@ class PFCPFuzzer:
 
             
             
-            packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=1)
+            packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=555)
             packet.show()
             res = sr1(packet)
             
@@ -61,6 +61,7 @@ class PFCPFuzzer:
             for ie in res[PFCP].IE_list:
                 if isinstance(ie, IE_Cause):
                     pfcp_cause = ie.cause
+                    self.logger.info(f"PFCP Cause: {pfcp_cause}")
                     break
             
             if pfcp_cause == 1:
