@@ -15,6 +15,7 @@ class PFCPFuzzer:
     def __init__(self):
         self.class_prefix="[PFCP-FUZZER]"
         self.paramsHandler = HandleParams(self.class_prefix)
+        self.logger = Log(self.class_prefix)
         
         self.verbose = False
         conf.verb = 0
