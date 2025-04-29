@@ -210,14 +210,26 @@ NET_IFACE= "eth0"
         
 # print ("PFCP Session Modification Request sent")
        
+# PFCPFuzzer_obj = PFCPFuzzer()
+# PFCPFuzzer_obj.set_verbose(True)
+# ma_liste = PFCPFuzzer_obj.Start_PFCP_SEID_fuzzing(
+#     upf_addr=UPF_ADDR,
+#     src_addr=EVIL_ADDR,
+#     max_seid=10,
+#     src_port=SRC_PORT,
+#     dest_port=DEST_PORT
+# )
+
+# print(ma_liste)
+
 PFCPFuzzer_obj = PFCPFuzzer()
 PFCPFuzzer_obj.set_verbose(True)
-ma_liste = PFCPFuzzer_obj.Start_PFCP_SEID_fuzzing(
+PFCPFuzzer_obj.Start_PFCP_FARID_fuzzing(
     upf_addr=UPF_ADDR,
     src_addr=EVIL_ADDR,
     max_seid=10,
+    max_far_discover=100,
     src_port=SRC_PORT,
     dest_port=DEST_PORT
 )
 
-print(ma_liste)
