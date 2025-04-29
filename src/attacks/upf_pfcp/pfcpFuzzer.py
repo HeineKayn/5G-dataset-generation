@@ -14,8 +14,8 @@ from utils.logger import Log
 class PFCPFuzzer:
     def __init__(self):
         self.class_prefix="[PFCP-FUZZER]"
-        self.paramsHandler = HandleParams()
-        self.paramsHandler.basePrefix(self.class_prefix)
+        self.paramsHandler = HandleParams(self.class_prefix)
+        
         self.verbose = False
         conf.verb = 0
 
