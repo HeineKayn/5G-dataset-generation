@@ -70,7 +70,7 @@ class PFCPHijack:
         )
         
         
-        PFCPToolkit_obj.set_verbose(self.verbose)
+
         teid = random.randint(1, 100000)
         for seid, farid_list in valid_farids.items():
             self.logger.info(f"Valid FAR IDs for SEID {seid}:")
