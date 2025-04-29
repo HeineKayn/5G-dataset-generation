@@ -390,17 +390,11 @@ class PFCPToolkit:
                 )
                 ], 
         )
-        elif action_flags["FORW"] == 1:
+        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0:
             ie_update_far = IE_UpdateFAR(
             IE_list=[
                 IE_FAR_Id(id=far_id),
                 apply_action_ie,
-                IE_OuterHeaderCreation(
-                    GTPUUDPIPV4=1,
-                    TEID=teid,
-                    ipv4=tdest_addr,
-                    port=dest_port
-                )
             ]
         )
         

