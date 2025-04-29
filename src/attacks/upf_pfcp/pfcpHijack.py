@@ -51,8 +51,7 @@ class PFCPHijack:
             src_addr=hijacker_addr,
             dest_addr=upf_addr,
             src_port=src_port,
-            dest_port=dest_port,
-            seid=seid
+            dest_port=dest_port
         )
         
         
