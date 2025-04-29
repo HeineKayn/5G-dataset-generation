@@ -316,7 +316,7 @@ class PFCPToolkit:
         return packet
     
     
-    def Build_PFCP_session_modification_req(self, seid, far_id, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"]):
+    def Build_PFCP_session_modification_req(self, seid, far_id, tdest_addr,  src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"], teid=0x11111111 ):
         """
         Build a PFCP Session Modification Request packet.
 
@@ -369,7 +369,43 @@ class PFCPToolkit:
                 self.logger.error(f"Unknown apply action: {action}")
 
         apply_action_ie = IE_ApplyAction(**action_flags)
-        update_ie = self.Update_FAR(far_id, apply_action_ie=apply_action_ie)
+        
+        ie_update_far = None
+        
+        if action_flags["DUPL"] == 1:
+            ie_update_far = IE_UpdateFAR(
+            IE_list=[
+                IE_FAR_Id(id=far_id),
+                apply_action_ie,
+                IE_DuplicatingParameters(
+                    IE_list=[
+                        IE_OuterHeaderCreation(
+                        GTPUUDPIPV4=1,
+                        TEID=teid,
+                        ipv4=tdest_addr,
+                        port=dest_port 
+                        ),
+                        
+                    ]
+                )
+                ], 
+        )
+        elif action_flags["FORW"] == 1:
+            ie_update_far = IE_UpdateFAR(
+            IE_list=[
+                IE_FAR_Id(id=far_id),
+                apply_action_ie,
+                IE_OuterHeaderCreation(
+                    GTPUUDPIPV4=1,
+                    TEID=teid,
+                    ipv4=tdest_addr,
+                    port=dest_port
+                )
+            ]
+        )
+        
+        ie_update_far = Raw(bytes(ie_update_far))
+        update_ie = ie_update_far
 
         packet = PFCP(
             version=1,
@@ -561,3 +597,53 @@ class PFCPToolkit:
             
         return pfcp_cause
         
+    def Send_PFCP_session_modification_req(self, seid, far_id, tdest_addr, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"]):
+        """
+        Send a PFCP Session Modification Request to a PFCP peer (typically a UPF).
+
+        Args:
+            seid (int): Session Endpoint Identifier (SEID) of the session to modify.
+            far_id (int): Forwarding Action Rule (FAR) ID to update.
+            src_addr (str, optional): Source IPv4 address for the PFCP message. Defaults to instance's src_addr.
+            dest_addr (str, optional): Destination IPv4 address (typically the UPF). Defaults to instance's dest_addr.
+            src_port (int, optional): UDP source port for sending the PFCP message. Defaults to instance's src_port.
+            dest_port (int, optional): UDP destination port for the PFCP message. Defaults to instance's dest_port.
+            apply_action (list or str, optional): Actions to apply to the FAR (e.g., ["FORW", "DUPL"]). Defaults to ["FORW"].
+
+        Returns:
+            None
+        """
+
+        src_addr = src_addr or self.src_addr
+        dest_addr = dest_addr or self.dest_addr
+        src_port = src_port or self.src_port
+        dest_port = dest_port or self.dest_port
+        
+        
+        if not self.paramsHandler.check_parameters({
+            "src_addr": src_addr,
+            "dest_addr": dest_addr,
+            "src_port": src_port,
+            "dest_port": dest_port,
+            "seid": seid,
+            "far_id": far_id
+            
+        }, "[Send_PFCP_session_modification_req]"):
+            return
+        
+        
+        pfcp_session_modification_req = self.Build_PFCP_session_modification_req(
+                seid=seid,
+                far_id=far_id,
+                tdest_addr=tdest_addr,
+                src_addr=src_addr,
+                dest_addr=dest_addr,
+                src_port=src_port,
+                dest_port=dest_port,
+                apply_action=apply_action
+            )
+        
+        send(pfcp_session_modification_req)
+        
+        if self.verbose:
+            self.logger.success(f"PFCP Session Modification packet sent to {dest_addr} with SEID {seid} and FAR ID {far_id}")
