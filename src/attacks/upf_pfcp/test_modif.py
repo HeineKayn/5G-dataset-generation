@@ -191,7 +191,6 @@ PFCPToolkit_obj = PFCPToolkit(
     dest_addr=UPF_ADDR,
     src_port=SRC_PORT,
     dest_port=DEST_PORT,
-,
     verbose=True
 )
 for seid in range(1,10):
