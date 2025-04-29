@@ -113,7 +113,7 @@ def Build_PFCP_session_modification_req(seid, far_id, src_addr=None, dest_addr=N
             IE_list=[
                 IE_OuterHeaderCreation(
                 GTPUUDPIPV4=1,
-                TEID=0x11111111,
+                TEID=new_teid(randomize=True),
                 ipv4="10.0.0.55",
                 port=2152 
                 ),
@@ -190,9 +190,12 @@ for seid in range(1,10):
             dest_addr=UPF_ADDR,
             src_port=SRC_PORT,
             dest_port=DEST_PORT,
-            apply_action=["FORW", "DUPL"]
+            apply_action=["FORW", "DUPL"],
+            
         )
         send(modif_req)
+
+print ("PFCP Session Modification Request sent")
        
     
 
