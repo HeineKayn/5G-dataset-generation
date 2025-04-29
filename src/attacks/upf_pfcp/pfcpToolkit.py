@@ -371,7 +371,7 @@ class PFCPToolkit:
         apply_action_ie = IE_ApplyAction(**action_flags)
         
         ie_update_far = None
-        self.logger.info(f"Action flags: {action_flags}, tdest_addr: {tdest_addr}")
+        
         if action_flags["DUPL"] == 1:
             ie_update_far = IE_UpdateFAR(
             IE_list=[

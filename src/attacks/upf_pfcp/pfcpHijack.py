@@ -67,7 +67,8 @@ class PFCPHijack:
             dest_port=dest_port,
             seid=seid
         )
-
+        
+        
         PFCPToolkit_obj.verbose(self.verbose)
         teid = random.randint(1, 100000)
         for seid, farid_list in valid_farids.items():
