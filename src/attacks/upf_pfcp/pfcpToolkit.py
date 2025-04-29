@@ -316,7 +316,7 @@ class PFCPToolkit:
         return packet
     
     
-    def Build_PFCP_session_modification_req(self, seid, far_id, tdest_addr,  src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"], teid=0x11111111 ):
+    def Build_PFCP_session_modification_req(self, seid, far_id, tdest_addr=None,  src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"], teid=0x11111111 ):
         """
         Build a PFCP Session Modification Request packet.
 

@@ -52,7 +52,7 @@ class PFCPFuzzer:
 
             
             
-            packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid)
+            packet = PFCPToolkit_obj.Build_PFCP_session_modification_req(seid=seid, far_id=1)
             packet.show()
             res = sr1(packet)
             
