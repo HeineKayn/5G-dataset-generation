@@ -32,8 +32,8 @@ This framework is designed for testing and simulating PFCP interactions in a 5G 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/pfcp-toolkit.git
-   cd pfcp-toolkit
+   git clone --branch guilhem --single-branch https://github.com/HeineKayn/5G-dataset-generation.git
+   cd src/attacks/upf_pfcp
    ```
 
 2. Install dependencies:
@@ -54,85 +54,51 @@ This framework is designed for testing and simulating PFCP interactions in a 5G 
 
 The `PFCPToolkit` class provides utilities for building and sending PFCP messages.
 
+#### Features
+- Build and send PFCP Association Setup Requests
+- Build and send PFCP Session Establishment Requests
+- Build and send PFCP Session Modification Requests (FAR updates)
+- Build and send PFCP Session Deletion Requests
+- Random SEID, TEID, Sequence support
+- Logging, parameter handling, and verbose output
+
 #### Methods
-- **`Build_PFCP_association_setup_req`**: Builds a PFCP Association Setup Request.
-- **`Build_PFCP_session_establishment_req`**: Builds a PFCP Session Establishment Request.
-- **`Send_PFCP_association_setup_req`**: Sends a PFCP Association Setup Request.
-- **`Send_PFCP_session_establishment_req`**: Sends a PFCP Session Establishment Request.
+- `Build_PFCP_association_setup_req(...)`
+- `Build_PFCP_session_establishment_req(...)`
+- `Build_PFCP_session_modification_req(...)`
+- `Build_PFCP_session_deletion_req(...)`
+- `Send_PFCP_association_setup_req(...)`
+- `Send_PFCP_session_establishment_req(...)`
+- `Send_PFCP_session_modification_req(...)`
+- `Send_PFCP_session_deletion_req(...)`
+- `Random_create_far()`
+- `Update_FAR(...)`
 
-#### Example
-```python
-from pfcpToolkit import PFCPToolkit
-
-toolkit = PFCPToolkit(src_addr="10.100.200.66", dest_addr="10.100.200.2", verbose=True)
-toolkit.Send_PFCP_association_setup_req()
-toolkit.Send_PFCP_session_establishment_req(seid=0xC0FFEE, ue_addr="1.1.1.1")
-```
-
----
+> See the class source file `pfcpToolkit.py` for full implementation and parameter details.
 
 ### PFCPDosAttack
 
-The `PFCPDosAttack` class is used to perform DoS attacks using PFCP messages.
+Used to perform denial of service (DoS) attacks on a target PFCP-enabled node.
 
 #### Methods
-- **`Start_pfcp_session_establishment_flood`**: Starts a flood of PFCP Session Establishment Requests.
-- **`Start_pfcp_session_deletion_bruteforce`**: Performs a brute-force attack by sending PFCP Session Deletion Requests.
-- **`Start_pfcp_session_deletion_targeted`**: Targets a specific SEID for deletion.
-
-#### Example
-```python
-from pfcpDosAttack import PFCPDosAttack
-
-dos = PFCPDosAttack(src_addr="10.100.200.66", dest_addr="10.100.200.2", verbose=True)
-dos.Start_pfcp_session_establishment_flood(reqNbr=100, num_threads=5)
-```
-
----
+- `Start_pfcp_session_establishment_flood(...)`
+- `Start_pfcp_session_deletion_bruteforce(...)`
+- `Start_pfcp_session_deletion_targeted(...)`
 
 ### PFCPFuzzer
 
-The `PFCPFuzzer` class is used to fuzz PFCP parameters like SEIDs and FARs.
+Used to discover valid session and FAR identifiers via fuzzing.
 
 #### Methods
-- **`Start_PFCP_SEID_fuzzing`**: Fuzzes SEIDs to discover valid ones.
-- **`Start_PFCP_FARID_fuzzing`**: Fuzzes FAR IDs to discover valid ones.
-
-#### Example
-```python
-from pfcpFuzzer import PFCPFuzzer
-
-fuzzer = PFCPFuzzer()
-fuzzer.set_verbose(True)
-fuzzer.Start_PFCP_SEID_fuzzing(
-    upf_addr="10.100.200.2",
-    src_addr="10.100.200.66",
-    max_seid=1000,
-    max_far_discover=10
-)
-```
-
----
+- `Start_PFCP_SEID_fuzzing(...)`
+- `Start_PFCP_FARID_fuzzing(...)`
 
 ### PFCPHijack
 
-The `PFCPHijack` class is used to hijack PFCP sessions by manipulating FARs.
+Used to hijack PFCP sessions by modifying their FARs.
 
 #### Methods
-- **`Start_PFCP_hijack_far_manipulation`**: Hijacks a session by modifying FARs.
-
-#### Example
-```python
-from pfcpHijack import PFCPHijack
-
-hijack = PFCPHijack()
-hijack.set_verbose(True)
-hijack.Start_PFCP_hijack_far_manipulation(
-    hijacker_addr="10.100.200.66",
-    upf_addr="10.100.200.2",
-    seid=0xC0FFEE
-)
-```
+- `Start_PFCP_hijack_far_manipulation(...)`
 
 ---
 
@@ -192,3 +158,4 @@ hijack.Start_PFCP_hijack_far_manipulation(
 
 ## License
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
