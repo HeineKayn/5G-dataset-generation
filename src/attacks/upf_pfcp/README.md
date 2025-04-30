@@ -33,7 +33,7 @@ This framework is designed for testing and simulating PFCP interactions in a 5G 
 1. Clone the repository:
    ```bash
    git clone --branch guilhem --single-branch https://github.com/HeineKayn/5G-dataset-generation.git
-   cd src/attacks/upf_pfcp
+   cd 5G-dataset-generation/src/attacks/upf_pfcp
    ```
 
 2. Install dependencies:
