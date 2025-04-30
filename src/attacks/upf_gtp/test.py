@@ -3,6 +3,11 @@ from scapy.contrib.gtp import *
 from scapy.layers.inet import IP, ICMP
 import sys
 from utils.logger import Log
+from scapy.all import arping, get_if_list
+
+
+
+
 
 logger = Log("[GTP-U]")
 
@@ -12,8 +17,12 @@ ue_ip = sys.argv[2]
 upf_ip = "10.100.200.2"
 dport = 2152
 
+logger.info(f"Interfaces: {get_if_list()}")
 
-ip_payload = IP(src=src_ip, dst=ue_ip) / ICMP(id=0xCC, seq=0xAA)
+arping(upf_ip)
+
+
+ip_payload = IP(src=src_ip, dst=ue_ip) / ICMP(id=0xCC, seq=0x1)
 
 gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
