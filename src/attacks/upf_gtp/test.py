@@ -13,7 +13,7 @@ upf_ip = "10.100.200.2"
 dport = 2152
 
 
-ip_payload = IP(src=src_ip, dst=ue_ip) / ICMP()
+ip_payload = IP(src=src_ip, dst=ue_ip) / ICMP(id=0xC0FFEE, seq=0xBEEF)
 
 gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
