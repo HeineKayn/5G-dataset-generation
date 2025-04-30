@@ -27,7 +27,7 @@ class PFCPDosAttack:
         smf_addr (str, optional): Address of the SMF for targeted deletion attacks.
     """
 
-    def __init__(self, evil_addr, upf_addr, src_port, dest_port, interface="eth0", ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15, smf_addr=None):
+    def __init__(self, evil_addr=None, upf_addr=None, src_port=None, dest_port=None, interface="eth0", ue_start_addr="1.1.1.1", verbose=False, prepare=False, randomize=False, random_far_number=15, smf_addr=None):
         self.evil_addr = evil_addr
         self.upf_addr = upf_addr
         self.src_port = src_port

