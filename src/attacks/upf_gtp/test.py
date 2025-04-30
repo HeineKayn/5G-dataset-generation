@@ -22,7 +22,7 @@ logger.info(f"Interfaces: {get_if_list()}")
 arping(upf_ip)
 
 
-ip_payload = IP(src=src_ip, dst=ue_ip) / ICMP(id=0xCC, seq=0x1)
+ip_payload = IP(src=src_ip, dst=ue_ip) / ICMP(type=8, id=0x1234, seq=1) / b"ABCDEFGHIJKLMNOPQRSTUVWX"
 
 gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
