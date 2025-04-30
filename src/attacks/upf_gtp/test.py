@@ -6,7 +6,7 @@ from utils.logger import Log
 
 logger = Log("[GTP-U]")
 
-teid = int(int(sys.argv[1]), 0)
+teid = int(sys.argv[1], 0)
 src_ip = "10.100.200.66"
 ue_ip = sys.argv[2]
 upf_ip = "10.100.200.2"
