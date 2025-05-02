@@ -9,15 +9,19 @@ from scapy.all import arping, get_if_list
 
 
 
+
+
 logger = Log("[GTP-U]")
 
 teid = int(sys.argv[1], 0)
-src_ip = "8.8.8.8"
+src_ip = "10.100.200.66"
 ue_ip = sys.argv[2]
 upf_ip = "10.100.200.2"
 dport = 2152
 
 logger.info(f"Interfaces: {get_if_list()}")
+
+
 
 arping(upf_ip)
 
