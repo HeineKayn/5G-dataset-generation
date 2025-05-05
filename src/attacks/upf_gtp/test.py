@@ -4,9 +4,10 @@ from scapy.layers.inet import IP, ICMP
 import sys
 from utils.logger import Log
 from scapy.all import arping, get_if_list
+import random
 
-
-
+def new_seq(rand = False):
+    return random.randint(0, 0xFFFF)
 
 
 
@@ -15,7 +16,7 @@ logger = Log("[GTP-U]")
 
 teid = int(sys.argv[1], 0)
 src_ip = "10.100.200.66"
-spoofed_ip = "8.8.8.8"
+spoofed_ip = "99.99.99.99"
 ue_ip = sys.argv[2]
 gnb_addr = "10.100.200.14"
 upf_ip = "10.100.200.2"
@@ -26,6 +27,7 @@ logger.info(f"Interfaces: {get_if_list()}")
 
 
 arping(upf_ip)
+
 
 
 ip_payload = IP(src=spoofed_ip, dst=ue_ip) / ICMP(type=8, id=0x1234, seq=1) / b"ABCDEFGHIJKLMNOPQRSTUVWX"

