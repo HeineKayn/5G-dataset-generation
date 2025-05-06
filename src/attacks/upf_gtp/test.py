@@ -50,7 +50,7 @@ ip_payload = IP(src=spoofed_ip, dst=ue_ip) / ICMP(type=8, id=0x1234, seq=new_seq
 
 gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
-packet = IP(src=gnb_addr, dst=upf_ip) / UDP(dport=dport, sport=RandShort()) / gtpu_header
+packet = IP(src=gnb_addr, dst=upf_ip) / UDP(dport=dport, sport=dport) / gtpu_header
 
 logger.info(f"Sending GTP-U packet with TEID {hex(teid)} to {ue_ip} through the upf ({upf_ip})")
 
