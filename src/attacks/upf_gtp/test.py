@@ -16,7 +16,7 @@ logger = Log("[GTP-U]")
 
 teid = int(sys.argv[1], 0)
 src_ip = "10.100.200.66"
-spoofed_ip = "129.151.240.63"
+spoofed_ip = "8.8.8.8"
 ue_ip = sys.argv[2]
 gnb_addr = "10.100.200.14"
 upf_ip = "10.100.200.2"
