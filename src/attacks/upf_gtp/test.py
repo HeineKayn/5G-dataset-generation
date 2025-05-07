@@ -49,7 +49,7 @@ def start_gtp_uplink_attack(
         / b"ABCDEFGHIJKLMNOPQRSTUVWX"
     )
 
-    gtpu_header = upf_addr(teid=teid) / ip_payload
+    gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
     packet = (
         IP(src=gnb_addr, dst=upf_addr)
