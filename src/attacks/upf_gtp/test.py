@@ -46,7 +46,7 @@ arping(upf_ip)
 
 
 
-ip_payload = IP(src=spoofed_ip, dst=ue_ip) / ICMP(type=8, id=0x1234, seq=new_seq(True)) / b"ABCDEFGHIJKLMNOPQRSTUVWX"
+ip_payload = IP(src=ue_ip, dst=spoofed_ip) / ICMP(type=8, id=0x1234, seq=new_seq(True)) / b"ABCDEFGHIJKLMNOPQRSTUVWX"
 
 gtpu_header = GTP_U_Header(teid=teid) / ip_payload
 
