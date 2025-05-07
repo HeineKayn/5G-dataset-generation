@@ -58,7 +58,7 @@ def start_gtp_uplink_attack(
     )
 
     print(
-        f"[i]  Sending GTP-U packet to {dst_addr} through UPF ({upf_addr}), TEID {teid}, spoofing UE {ue_addr}, source IP {src_cn_addr}"
+        f"[i]  Sending GTP-U packet to {dst_addr} through UPF ({upf_addr}), TEID {teid}, spoofing UE {ue_addr}, source IP {src_addr}"
     )
 
     send(packet)
