@@ -67,6 +67,8 @@ def build_malicious_pfcp_in_gtp_packet(
         / pfcp_packet
     )
 
+    return gtp_packet
+
 
 def send_malicious_pfcp_in_gtp_packet(
     src_addr,
