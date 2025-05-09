@@ -4,7 +4,7 @@ from scapy.contrib.pfcp import *
 import sys
 import random
 import time
-from ..src import ip_list
+from ....src import ip_list
 
 
 PFCP_PORT = 8805
