@@ -21,7 +21,7 @@ def new_seq(rand=False):
     return seq
 
 
-def build_PFCP_association_setup_req(self, src_addr, dest_addr, src_port, dest_port):
+def build_PFCP_association_setup_req(src_addr, dest_addr, src_port, dest_port):
     global seq
 
     seq = new_seq(True)
