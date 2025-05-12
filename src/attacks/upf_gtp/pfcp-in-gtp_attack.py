@@ -36,7 +36,9 @@ def build_PFCP_association_setup_req(src_addr, dest_addr, ue_addr, src_port, des
     )
 
     packet = (
-        IP(src=ue_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / pfcp_msg
+        IP(src=src_addr, dst=dest_addr)
+        / UDP(sport=src_port, dport=dest_port)
+        / pfcp_msg
     )
     packet = packet.__class__(bytes(packet))
     return packet
