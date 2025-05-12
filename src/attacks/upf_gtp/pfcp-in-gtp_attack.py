@@ -27,7 +27,7 @@ def build_PFCP_association_setup_req(src_addr, dest_addr, ue_addr, src_port, des
     seq = new_seq(True)
 
     # Trick to bypass scapy's bad parsing
-    node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=ue_addr)))
+    node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
     recovery_timestamp = Raw(bytes(IE_RecoveryTimeStamp(timestamp=int(time.time()))))
     pfcp_msg = (
         PFCP(version=1, message_type=5, seid=0, S=0, seq=seq)
