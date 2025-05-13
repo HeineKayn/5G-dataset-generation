@@ -47,9 +47,9 @@ def build_malicious_pfcp_in_gtp_packet(
     dest_addr,
     teid,
     ue_addr,
-    gtpu_src_port=RandShort(),
+    gtpu_src_port=2152,
     gtpu_dest_port=2152,
-    pfcp_src_port=RandShort(),
+    pfcp_src_port=2152,
     pfcp_dest_port=8805,
 ):
     pfcp_packet = build_PFCP_association_setup_req(
