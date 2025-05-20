@@ -18,8 +18,17 @@ def send_marker_packet(marker_name, src_ip="111.111.111.111", dst_ip="222.222.22
 
 def handle_markers(marker_name, func):
     send_marker_packet(marker_name=f"{marker_name}_START")
+    print(
+        "---------------------- Marker {marker_name}_START Sent ---------------------"
+    )
+    print("###   Attack {marker_name} Status: STARTED")
     func()
+    print("###   Attack {marker_name} Statu: FINISHED")
+
     send_marker_packet(marker_name=f"{marker_name}_END")
+    print(
+        "---------------------- Marker {marker_name}_START Sent ---------------------"
+    )
 
 
 def replace_ip_and_mac_between_markers(
