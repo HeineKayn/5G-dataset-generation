@@ -8,7 +8,7 @@ from src.pfcpToolkit.utils.logger import Log
 from src.pfcpToolkit.utils.handleParams import HandleParams
 
 
-from pfcpFuzzer import PFCPFuzzer
+from src.attacks.upf_pfcp.pfcpFuzzer import PFCPFuzzer
 
 
 class PFCPHijack:
