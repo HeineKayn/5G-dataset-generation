@@ -31,22 +31,12 @@ class PFCPFuzzer:
         src_addr,
         max_seid=10000,
         max_far_discover=100,
-        src_port=None,
-        dest_port=None,
+        src_port=8805,
+        dest_port=8805,
     ):
         """
         Start PFCP SEID fuzzing
         """
-
-        self.paramsHandler.check_parameters(
-            {
-                "upf_addr": upf_addr,
-                "max_seid": max_seid,
-                "src_port": src_port,
-                "dest_port": dest_port,
-            },
-            "[Start_PFCP_SEID_fuzzing]",
-        )
 
         # Create a PFCPToolkit object
         PFCPToolkit_obj = PFCPToolkit(
@@ -98,8 +88,8 @@ class PFCPFuzzer:
         src_addr,
         max_seid=100,
         max_far_discover=100,
-        src_port=None,
-        dest_port=None,
+        src_port=8805,
+        dest_port=8805,
         seid=None,
     ):
         """
