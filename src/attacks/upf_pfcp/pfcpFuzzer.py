@@ -5,8 +5,8 @@ from scapy.all import send, sr1, conf
 
 from scapy.contrib.pfcp import *
 
-from src.attacks.upf_pfcp.utils.handleParams import HandleParams
-from src.attacks.upf_pfcp.utils.logger import Log
+from src.pfcpToolkit.utils.logger import Log
+from src.pfcpToolkit.utils.handleParams import HandleParams
 
 from collections import defaultdict
 
