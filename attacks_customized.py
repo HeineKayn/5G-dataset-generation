@@ -73,7 +73,9 @@ def pfcp_seid_fuzzing_customized(spoofed_addr):
     handle_markers(
         "pfcpSeidFuzzing",
         lambda: PFCPFuzzer().start_PFCP_SEID_fuzzing(
-            src_addr=spoofed_addr, upf_addr=ip_list["UPF"]
+            src_addr=spoofed_addr,
+            upf_addr=ip_list["UPF"],
+            max_seid=20,
         ),
     )
 
@@ -84,6 +86,8 @@ def pfcp_far_fuzzing_customized(spoofed_addr):
         lambda: PFCPFuzzer().start_PFCP_FARID_fuzzing(
             src_addr=spoofed_addr,
             upf_addr=ip_list["UPF"],
+            max_far_discover=20,
+            max_seid=20,
         ),
     )
 
