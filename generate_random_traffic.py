@@ -46,6 +46,9 @@ def random_attack():
         pfcp_session_deletion_targeted_customized,
         pfcp_session_modification_far_drop_bruteforce_customized,
         pfcp_session_modification_far_dupl_bruteforce_customized,
+        pfcp_seid_fuzzing_customized,
+        pfcp_far_fuzzing_customized,
+        pfcp_hijack_far_manipulation_customized,
     ]
     random.choice(attack_functions)(ip_list["EVIL"])
 
