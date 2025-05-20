@@ -5,8 +5,9 @@ from scapy.all import send, sr1
 
 from scapy.contrib.pfcp import *
 
-from utils.handleParams import HandleParams
-from utils.logger import Log
+from src.attacks.upf_pfcp.utils.handleParams import HandleParams
+from src.attacks.upf_pfcp.utils.logger import Log
+
 
 from pfcpFuzzer import PFCPFuzzer
 
