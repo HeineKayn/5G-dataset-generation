@@ -1,4 +1,3 @@
-# from pfcpToolkit import PFCPToolkit
 from src.pfcpToolkit.pfcpToolkit import PFCPToolkit
 import random, time, threading, ipaddress
 from scapy.all import send, sr1
