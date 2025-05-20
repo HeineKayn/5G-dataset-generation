@@ -45,7 +45,7 @@ def start_gtp_uplink_attack(
     ip_payload = (
         IP(src=ue_addr, dst=dst_addr)
         / ICMP(type=8, id=0x1234, seq=new_seq(True))
-        / b"ABCDEFGHIJKLMNOPQRSTUVWX"
+        # / b"ABCDEFGHIJKLMNOPQRSTUVWX"
     )
 
     gtpu_header = GTP_U_Header(teid=teid) / ip_payload
