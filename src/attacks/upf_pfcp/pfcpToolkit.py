@@ -1,15 +1,16 @@
 from scapy.all import send, sendp, sr1, Ether, IP, UDP, conf
 from scapy.contrib.pfcp import *
 import random, time
-from utils.logger import Log
-from utils.handleParams import HandleParams
+from src.attacks.upf_pfcp.utils.logger import Log
+from src.attacks.upf_pfcp.utils.handleParams import HandleParams
+
 
 class PFCPToolkit:
     """
     PFCPToolkit is a utility class to build, send, and manage PFCP messages for 5G core network testing.
 
-    This class simplifies the creation and transmission of PFCP Association Setup, 
-    Session Establishment, Modification, and Deletion requests. It provides functionalities 
+    This class simplifies the creation and transmission of PFCP Association Setup,
+    Session Establishment, Modification, and Deletion requests. It provides functionalities
     to randomize identifiers (SEID, TEID, Sequence numbers) and manage PFCP sessions programmatically.
 
     Main Features:
@@ -32,32 +33,33 @@ class PFCPToolkit:
         seid (int, optional): Default SEID for session management (can be overridden).
     """
 
-    def __init__(self, src_addr=None, dest_addr=None, src_port=8805, dest_port=8805, verbose=False):
-        conf.verb = 0 # Disable Scapy's verbose mode
+    def __init__(
+        self,
+        src_addr=None,
+        dest_addr=None,
+        src_port=8805,
+        dest_port=8805,
+        verbose=False,
+    ):
+        conf.verb = 0  # Disable Scapy's verbose mode
         self.src_addr = src_addr
         self.dest_addr = dest_addr
         self.src_port = src_port
         self.dest_port = dest_port
         self.seq = 1
         self.verbose = verbose
-        self.seid=None
-        
+        self.seid = None
+
         self.classPrefix = "[PFCP-TLKT]"
         self.logger = Log(self.classPrefix)
-        
+
         self.paramsHandler = HandleParams(self.classPrefix)
-        
-        
+
         if verbose:
             self.logger.info("Verbose mode enabled")
 
-    # Utility functions 
-    
-        
-            
-            
-    
-        
+    # Utility functions
+
     def new_seq(self, randomize=False):
         """
         Generate a new sequence number for PFCP messages.
@@ -68,7 +70,7 @@ class PFCPToolkit:
         Returns:
             integer: The generated sequence number.
         """
-        
+
         if randomize:
             seqNbr = random.randint(1, 0xFFFFFFFF)
             return seqNbr
@@ -77,8 +79,7 @@ class PFCPToolkit:
         if self.seq > 0xFFFFFFFF:
             self.seq = 1
         return seq
-    
-    
+
     # FAR Operations
 
     def Random_create_far(self):
@@ -93,14 +94,14 @@ class PFCPToolkit:
                 IE_FAR_Id(id=random.randint(1, 255)),
                 IE_ApplyAction(FORW=1),
                 IE_OuterHeaderCreation(
-                    GTPUUDPIPV4=1, 
+                    GTPUUDPIPV4=1,
                     TEID=random.randint(1, 0xFFFFFFFF),
                     ipv4=".".join(str(random.randint(1, 254)) for _ in range(4)),
-                    port=2152
-                )
+                    port=2152,
+                ),
             ]
         )
-        
+
     def Update_FAR(self, far_id, apply_action_ie=IE_ApplyAction(FORW=1)):
         """
         Create a raw Update FAR (Forwarding Action Rule) Information Element for PFCP messages.
@@ -113,19 +114,15 @@ class PFCPToolkit:
             Raw: Raw bytes representing the Update FAR IE, ready to be included in a PFCP message.
         """
 
-        ie_update_far = IE_UpdateFAR(
-        IE_list=[
-            IE_FAR_Id(id=far_id),
-            apply_action_ie
-            ]
-        )
+        ie_update_far = IE_UpdateFAR(IE_list=[IE_FAR_Id(id=far_id), apply_action_ie])
         ie_update_far = Raw(bytes(ie_update_far))
         return ie_update_far
-    
-    
+
     # PFCP Message Building Functions
-    
-    def Build_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+
+    def Build_PFCP_association_setup_req(
+        self, src_addr=None, dest_addr=None, src_port=None, dest_port=None
+    ):
         """
         Build a PFCP Association Setup Request packet.
 
@@ -143,40 +140,53 @@ class PFCPToolkit:
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
-        
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            
-            
-        }, "[Build_PFCP_association_setup_req]"):
-            return 
-        
 
-        
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+            },
+            "[Build_PFCP_association_setup_req]",
+        ):
+            return
+
         seq = self.new_seq()
-        
+
         # Trick to bypass scapy's bad parsing
         node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
-        recovery_timestamp = Raw(bytes(IE_RecoveryTimeStamp(
-            timestamp=int(time.time())
-        )))
-        pfcp_msg = PFCP(
-            version=1,
-            message_type=5,
-            seid=0,
-            S=0,
-            seq=seq
-        )/node_id/recovery_timestamp
+        recovery_timestamp = Raw(
+            bytes(IE_RecoveryTimeStamp(timestamp=int(time.time())))
+        )
+        pfcp_msg = (
+            PFCP(version=1, message_type=5, seid=0, S=0, seq=seq)
+            / node_id
+            / recovery_timestamp
+        )
 
-        packet = IP(src=src_addr, dst=dest_addr)/UDP(sport=src_port, dport=dest_port)/pfcp_msg
+        packet = (
+            IP(src=src_addr, dst=dest_addr)
+            / UDP(sport=src_port, dport=dest_port)
+            / pfcp_msg
+        )
         packet = packet.__class__(bytes(packet))
         return packet
-    
-    def Build_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0):
+
+    def Build_PFCP_session_establishment_req(
+        self,
+        src_addr=None,
+        dest_addr=None,
+        src_port=None,
+        dest_port=None,
+        seid=0x1,
+        ue_addr=None,
+        teid=0x11111111,
+        precedence=255,
+        interface=1,
+        random_seq=False,
+        random_far_number=0,
+    ):
         """
         Build a PFCP Session Establishment Request packet.
 
@@ -202,67 +212,85 @@ class PFCPToolkit:
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
-        
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            "seid": seid,
-            
-        }, "[Build_PFCP_session_establishment_req]"):
-            return 
-        
 
-        
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+                "seid": seid,
+            },
+            "[Build_PFCP_session_establishment_req]",
+        ):
+            return
+
         seq = self.new_seq(randomize=random_seq)
-        
-        
-        
+
         ie_nodeid = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
         ie_fseid = Raw(bytes(IE_FSEID(seid=seid, v4=1, ipv4=src_addr)))
 
-        ie_createpdr = Raw(bytes(IE_CreatePDR(IE_list=[
-            IE_PDR_Id(id=1),
-            IE_Precedence(precedence=precedence),
-            IE_PDI(IE_list=[
-                IE_SourceInterface(interface=interface),
-                
-                IE_FTEID(TEID=teid, V4=1, ipv4=ue_addr)
-            ]),
-            IE_FAR_Id(id=1)
-        ])))
-
-        ie_createfar = Raw(bytes(IE_CreateFAR(IE_list=[
-            
-            IE_FAR_Id(id=1),
-            IE_ApplyAction(FORW=1),
-            IE_OuterHeaderCreation(
-                GTPUUDPIPV4=1, 
-                TEID=teid, 
-                ipv4=ue_addr, 
-                port=2152
+        ie_createpdr = Raw(
+            bytes(
+                IE_CreatePDR(
+                    IE_list=[
+                        IE_PDR_Id(id=1),
+                        IE_Precedence(precedence=precedence),
+                        IE_PDI(
+                            IE_list=[
+                                IE_SourceInterface(interface=interface),
+                                IE_FTEID(TEID=teid, V4=1, ipv4=ue_addr),
+                            ]
+                        ),
+                        IE_FAR_Id(id=1),
+                    ]
                 )
-        ])))
+            )
+        )
 
-        pfcp_msg = PFCP(
-            version=1,
-            message_type=50,
-            seid=0,
-            S=1,
-            seq=seq
-        ) / ie_nodeid / ie_fseid / ie_createpdr / ie_createfar
-        
+        ie_createfar = Raw(
+            bytes(
+                IE_CreateFAR(
+                    IE_list=[
+                        IE_FAR_Id(id=1),
+                        IE_ApplyAction(FORW=1),
+                        IE_OuterHeaderCreation(
+                            GTPUUDPIPV4=1, TEID=teid, ipv4=ue_addr, port=2152
+                        ),
+                    ]
+                )
+            )
+        )
+
+        pfcp_msg = (
+            PFCP(version=1, message_type=50, seid=0, S=1, seq=seq)
+            / ie_nodeid
+            / ie_fseid
+            / ie_createpdr
+            / ie_createfar
+        )
+
         if random_far_number:
             for i in range(random_far_number):
                 pfcp_msg = pfcp_msg / Raw(bytes(self.Random_create_far()))
 
-        pkt = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / pfcp_msg
+        pkt = (
+            IP(src=src_addr, dst=dest_addr)
+            / UDP(sport=src_port, dport=dest_port)
+            / pfcp_msg
+        )
         pkt = pkt.__class__(bytes(pkt))  # Recalcul final
         return pkt
 
-
-    def Build_PFCP_session_deletion_req(self, seid=None, src_addr=None, dest_addr=None, src_port=None, dest_port=None, random_seq=False):
+    def Build_PFCP_session_deletion_req(
+        self,
+        seid=None,
+        src_addr=None,
+        dest_addr=None,
+        src_port=None,
+        dest_port=None,
+        random_seq=False,
+    ):
         """
         Build a PFCP Session Establishment Request packet.
 
@@ -288,35 +316,51 @@ class PFCPToolkit:
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
-        
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            "seid": seid
-            
-            
-        }, "[Build_PFCP_session_deletion_req]"):
-            return 
-        
 
-                
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+                "seid": seid,
+            },
+            "[Build_PFCP_session_deletion_req]",
+        ):
+            return
+
         node_id = Raw(bytes(IE_NodeId(id_type=0, ipv4=src_addr)))
 
-        pfcp_msg = PFCP(
-            version=1,
-            message_type=54,
-            seid=seid,
-            S=1,
-            seq=self.new_seq(randomize=random_seq)
-        ) / node_id
-        packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / pfcp_msg
+        pfcp_msg = (
+            PFCP(
+                version=1,
+                message_type=54,
+                seid=seid,
+                S=1,
+                seq=self.new_seq(randomize=random_seq),
+            )
+            / node_id
+        )
+        packet = (
+            IP(src=src_addr, dst=dest_addr)
+            / UDP(sport=src_port, dport=dest_port)
+            / pfcp_msg
+        )
         packet = packet.__class__(bytes(packet))
         return packet
-    
-    
-    def Build_PFCP_session_modification_req(self, seid, far_id, tdest_addr=None,  src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"], teid=0x11111111 ):
+
+    def Build_PFCP_session_modification_req(
+        self,
+        seid,
+        far_id,
+        tdest_addr=None,
+        src_addr=None,
+        dest_addr=None,
+        src_port=None,
+        dest_port=None,
+        apply_action=["FORW"],
+        teid=0x11111111,
+    ):
         """
         Build a PFCP Session Modification Request packet.
 
@@ -338,14 +382,17 @@ class PFCPToolkit:
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
 
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            "seid": seid,
-            "far_id": far_id,
-        }, "[Build_PFCP_session_modification_req]"):
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+                "seid": seid,
+                "far_id": far_id,
+            },
+            "[Build_PFCP_session_modification_req]",
+        ):
             return
 
         # Si une seule action est passée sous forme de string, on la convertit en liste
@@ -353,13 +400,7 @@ class PFCPToolkit:
             apply_action = [apply_action]
 
         # On prépare dynamiquement le dictionnaire des flags
-        action_flags = {
-            "FORW": 0,
-            "DROP": 0,
-            "BUFF": 0,
-            "NOCP": 0,
-            "DUPL": 0
-        }
+        action_flags = {"FORW": 0, "DROP": 0, "BUFF": 0, "NOCP": 0, "DUPL": 0}
 
         for action in apply_action:
             action = action.upper()
@@ -369,69 +410,68 @@ class PFCPToolkit:
                 self.logger.error(f"Unknown apply action: {action}")
 
         apply_action_ie = IE_ApplyAction(**action_flags)
-        
+
         ie_update_far = None
-        
+
         if action_flags["DUPL"] == 1:
             ie_update_far = IE_UpdateFAR(
-            IE_list=[
-                IE_FAR_Id(id=far_id),
-                apply_action_ie,
-                
-                IE_UpdateDuplicatingParameters(
-                    IE_list=[
-                        IE_OuterHeaderCreation(
-                        GTPUUDPIPV4=1,
-                        TEID=teid,
-                        ipv4=tdest_addr,
-                        port=2152 
-                        ),
-                        
-                    ]
-                )
-                ], 
-        )
-        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0 and tdest_addr is not None:
-            ie_update_far = IE_UpdateFAR(
-            IE_list=[
-                IE_FAR_Id(id=far_id),
-                apply_action_ie,
-                IE_OuterHeaderCreation(
-                    GTPUUDPIPV4=1,
-                    TEID=teid,
-                    ipv4=tdest_addr,
-                    port=2152 
-                )
-                
-            ]
-        )
-        elif action_flags["FORW"] == 1 and action_flags["DUPL"] == 0 or action_flags["DROP"] == 1:
-            ie_update_far = IE_UpdateFAR(
-            IE_list=[
-                IE_FAR_Id(id=far_id),
-                apply_action_ie,
-            
-                
-            ]
+                IE_list=[
+                    IE_FAR_Id(id=far_id),
+                    apply_action_ie,
+                    IE_UpdateDuplicatingParameters(
+                        IE_list=[
+                            IE_OuterHeaderCreation(
+                                GTPUUDPIPV4=1, TEID=teid, ipv4=tdest_addr, port=2152
+                            ),
+                        ]
+                    ),
+                ],
             )
-        
+        elif (
+            action_flags["FORW"] == 1
+            and action_flags["DUPL"] == 0
+            and tdest_addr is not None
+        ):
+            ie_update_far = IE_UpdateFAR(
+                IE_list=[
+                    IE_FAR_Id(id=far_id),
+                    apply_action_ie,
+                    IE_OuterHeaderCreation(
+                        GTPUUDPIPV4=1, TEID=teid, ipv4=tdest_addr, port=2152
+                    ),
+                ]
+            )
+        elif (
+            action_flags["FORW"] == 1
+            and action_flags["DUPL"] == 0
+            or action_flags["DROP"] == 1
+        ):
+            ie_update_far = IE_UpdateFAR(
+                IE_list=[
+                    IE_FAR_Id(id=far_id),
+                    apply_action_ie,
+                ]
+            )
+
         ie_update_far = Raw(bytes(ie_update_far))
         update_ie = ie_update_far
 
-        packet = PFCP(
-            version=1,
-            message_type=52,
-            S=1,
-            seid=seid,
-            seq=self.new_seq(True)
-        ) / update_ie
+        packet = (
+            PFCP(version=1, message_type=52, S=1, seid=seid, seq=self.new_seq(True))
+            / update_ie
+        )
 
-        packet = IP(src=src_addr, dst=dest_addr) / UDP(sport=src_port, dport=dest_port) / packet
+        packet = (
+            IP(src=src_addr, dst=dest_addr)
+            / UDP(sport=src_port, dport=dest_port)
+            / packet
+        )
         packet = packet.__class__(bytes(packet))
         return packet
 
-
-    def Send_PFCP_association_setup_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None):
+    def Send_PFCP_association_setup_req(
+        self, src_addr=None, dest_addr=None, src_port=None, dest_port=None
+    ):
         """
         Send a PFCP Association Setup Request to a PFCP peer (typically a UPF).
 
@@ -449,33 +489,45 @@ class PFCPToolkit:
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
-        
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
 
-            
-        }, "[Send_PFCP_association_setup_req]"):
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+            },
+            "[Send_PFCP_association_setup_req]",
+        ):
             return
-        
+
         seq = self.new_seq()
-        
-        
+
         pfcp_association_setup_req = self.Build_PFCP_association_setup_req(
             src_addr=src_addr,
             dest_addr=dest_addr,
             src_port=src_port,
-            dest_port=dest_port
+            dest_port=dest_port,
         )
         send(pfcp_association_setup_req)
         if self.verbose:
             self.logger.success(f"PFCP Association Setup packet sent to {dest_addr}")
-            
-            
-    def Send_PFCP_session_establishment_req(self, src_addr=None, dest_addr=None, src_port=None, dest_port=None,
-                                            seid=0x1, ue_addr=None, teid=0x11111111, precedence=255, interface=1, random_seq=False, random_far_number=0, use_sendp=False):
+
+    def Send_PFCP_session_establishment_req(
+        self,
+        src_addr=None,
+        dest_addr=None,
+        src_port=None,
+        dest_port=None,
+        seid=0x1,
+        ue_addr=None,
+        teid=0x11111111,
+        precedence=255,
+        interface=1,
+        random_seq=False,
+        random_far_number=0,
+        use_sendp=False,
+    ):
         """
         Send a PFCP Session Establishment Request to a PFCP peer.
 
@@ -503,24 +555,25 @@ class PFCPToolkit:
         dest_port = dest_port or self.dest_port
         seid = seid or self.seid
         seq = self.new_seq(randomize=random_seq)
-        
 
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            "seid": seid,
-            "ue_addr": ue_addr,
-        }, "[Send_PFCP_session_establishment_req]"):
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+                "seid": seid,
+                "ue_addr": ue_addr,
+            },
+            "[Send_PFCP_session_establishment_req]",
+        ):
             return
-        
+
         if self.verbose:
-            self.logger.info(f"Sending PFCP session establishment request to {dest_addr} with SEID {seid}, UE address {ue_addr}, TEID {teid}, precedence {precedence}, interface {interface}")
-           
-        
-        
-        
+            self.logger.info(
+                f"Sending PFCP session establishment request to {dest_addr} with SEID {seid}, UE address {ue_addr}, TEID {teid}, precedence {precedence}, interface {interface}"
+            )
+
         pfcp_session_establishment_req = self.Build_PFCP_session_establishment_req(
             src_addr=src_addr,
             dest_addr=dest_addr,
@@ -532,18 +585,27 @@ class PFCPToolkit:
             precedence=precedence,
             interface=interface,
             random_seq=random_seq,
-            random_far_number=random_far_number
-            
+            random_far_number=random_far_number,
         )
         if use_sendp:
-            sendp( Ether() /pfcp_session_establishment_req, iface="eth0")
+            sendp(Ether() / pfcp_session_establishment_req, iface="eth0")
         else:
             send(pfcp_session_establishment_req)
         if self.verbose:
-            self.logger.success(f"PFCP Session Establishment packet sent to {dest_addr} with SEID {seid}")
-            
+            self.logger.success(
+                f"PFCP Session Establishment packet sent to {dest_addr} with SEID {seid}"
+            )
 
-    def Send_PFCP_session_deletion_req(self, seid, src_addr=None, dest_addr=None, src_port=None, dest_port=None, turbo=False, random_seq=False):
+    def Send_PFCP_session_deletion_req(
+        self,
+        seid,
+        src_addr=None,
+        dest_addr=None,
+        src_port=None,
+        dest_port=None,
+        turbo=False,
+        random_seq=False,
+    ):
         """
         Send a PFCP Session Deletion Request to a PFCP peer (typically a UPF).
 
@@ -560,55 +622,65 @@ class PFCPToolkit:
             int or None: PFCP Cause IE value received in response if available, otherwise None.
         """
 
-        
         src_addr = src_addr or self.src_addr
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
-        
-        
-        
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            "seid": seid
-            
-        }, "[Send_PFCP_session_deletion_req]"):
+
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+                "seid": seid,
+            },
+            "[Send_PFCP_session_deletion_req]",
+        ):
             return
-        
-        seq=self.new_seq()
+
+        seq = self.new_seq()
 
         req = self.Build_PFCP_session_deletion_req(
-                seid=seid,
-                src_addr=src_addr,
-                dest_addr=dest_addr,
-                src_port=src_port,
-                dest_port=dest_port,
-                random_seq=random_seq
-            )
+            seid=seid,
+            src_addr=src_addr,
+            dest_addr=dest_addr,
+            src_port=src_port,
+            dest_port=dest_port,
+            random_seq=random_seq,
+        )
         if turbo:
             send(req)
             return
-        
+
         res = sr1(req)
         if not res:
             self.logger.error("No response received for PFCP session deletion request")
-            
-        
+
         pfcp_cause = None
-        
+
         for ie in res[PFCP].IE_list:
             if isinstance(ie, IE_Cause):
                 pfcp_cause = ie.cause
                 break
         if self.verbose:
-            self.logger.info(f"PFCP Session Deletion response received with cause: {pfcp_cause}")
-            
+            self.logger.info(
+                f"PFCP Session Deletion response received with cause: {pfcp_cause}"
+            )
+
         return pfcp_cause
-        
-    def Send_PFCP_session_modification_req(self, seid, far_id, tdest_addr, src_addr=None, dest_addr=None, src_port=None, dest_port=None, apply_action=["FORW"]):
+
+    def Send_PFCP_session_modification_req(
+        self,
+        seid,
+        far_id,
+        tdest_addr,
+        src_addr=None,
+        dest_addr=None,
+        src_port=None,
+        dest_port=None,
+        apply_action=["FORW"],
+    ):
         """
         Send a PFCP Session Modification Request to a PFCP peer (typically a UPF).
 
@@ -629,32 +701,34 @@ class PFCPToolkit:
         dest_addr = dest_addr or self.dest_addr
         src_port = src_port or self.src_port
         dest_port = dest_port or self.dest_port
-        
-        
-        if not self.paramsHandler.check_parameters({
-            "src_addr": src_addr,
-            "dest_addr": dest_addr,
-            "src_port": src_port,
-            "dest_port": dest_port,
-            "seid": seid,
-            "far_id": far_id
-            
-        }, "[Send_PFCP_session_modification_req]"):
+
+        if not self.paramsHandler.check_parameters(
+            {
+                "src_addr": src_addr,
+                "dest_addr": dest_addr,
+                "src_port": src_port,
+                "dest_port": dest_port,
+                "seid": seid,
+                "far_id": far_id,
+            },
+            "[Send_PFCP_session_modification_req]",
+        ):
             return
-        
-        
+
         pfcp_session_modification_req = self.Build_PFCP_session_modification_req(
-                seid=seid,
-                far_id=far_id,
-                tdest_addr=tdest_addr,
-                src_addr=src_addr,
-                dest_addr=dest_addr,
-                src_port=src_port,
-                dest_port=dest_port,
-                apply_action=apply_action
-            )
-        
+            seid=seid,
+            far_id=far_id,
+            tdest_addr=tdest_addr,
+            src_addr=src_addr,
+            dest_addr=dest_addr,
+            src_port=src_port,
+            dest_port=dest_port,
+            apply_action=apply_action,
+        )
+
         send(pfcp_session_modification_req)
-        
+
         if self.verbose:
-            self.logger.success(f"PFCP Session Modification packet sent to {dest_addr} with SEID {seid} and FAR ID {far_id}")
+            self.logger.success(
+                f"PFCP Session Modification packet sent to {dest_addr} with SEID {seid} and FAR ID {far_id}"
+            )
