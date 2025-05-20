@@ -95,6 +95,8 @@ def pfcp_hijack_far_manipulation_customized(spoofed_addr):
     handle_markers(
         "pfcpHijackFarManipulation",
         lambda: PFCPHijack().start_PFCP_hijack_far_manipulation(
-            hijacker_addr=spoofed_addr, upf_addr=ip_list["UPF"]
+            hijacker_addr=spoofed_addr,
+            upf_addr=ip_list["UPF"],
+            seid=random.randint(1, 20),
         ),
     )
