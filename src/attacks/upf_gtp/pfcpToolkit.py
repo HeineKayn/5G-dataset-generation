@@ -2,7 +2,7 @@ from scapy.all import send, sendp, sr1, Ether, IP, UDP, conf
 from scapy.contrib.pfcp import *
 import random, time
 from src.attacks.upf_pfcp.utils.logger import Log
-from utils.handleParams import HandleParams
+from src.attacks.upf_pfcp.utils.handleParams import HandleParams
 
 
 class PFCPToolkit:
