@@ -187,7 +187,6 @@ def spoof_udm_and_restore(spoofed_ip):
     )
     print(f"[+] Real UDM {real_nf_instanceId} restored at {real_nf_ip}")
 
-    # Step 6: Clean up AMF registration
     remove_nf(nf_instance_id, token, display=False)
     print(f"[-] AMF instance {nf_instance_id} removed")
 
@@ -197,4 +196,17 @@ def udm_spoofing_customized(spoofed_addr):
     handle_markers(
         "udmSpoofing",
         lambda: spoof_udm_and_restore(spoofed_ip=spoofed_addr),
+    )
+
+
+def free5gcCNFuzzing_customized(spoofed_addr):
+
+    handle_markers(
+        "cnFuzzing",
+        lambda: Free5GCCNFuzzing().fuzz(
+            nf_list=["NRF"],
+            nb_file=10,
+            nb_url=10,
+            nb_method=10,
+        ),
     )
