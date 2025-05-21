@@ -22,11 +22,12 @@ def handle_markers(marker_name, func):
         f"---------------------- Marker {marker_name}_START Sent ---------------------"
     )
     print(f"###   Attack {marker_name} Status: STARTED")
-    func()
+    res = func()
     print(f"###   Attack {marker_name} Status: FINISHED")
 
     send_marker_packet(marker_name=f"{marker_name}_END")
     print(f"---------------------- Marker {marker_name}_END Sent ---------------------")
+    return res
 
 
 def replace_ip_and_mac_between_markers(

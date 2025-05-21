@@ -4,22 +4,7 @@ import time
 
 from attacks_customized import *
 
-
-# Pour chaque attaque ici on fait une fonction on aura plus qu'a appeler la vraie fonction et custom les paramètres
-def attack1():
-    print("Attack 1 executed")
-
-
-def attack2():
-    print("Attack 2 executed")
-
-
-def attack3():
-    print("Attack 3 executed")
-
-
-def attack4():
-    print("Attack 4 executed")
+RANDOM_SEED = 1
 
 
 def benin1():
@@ -49,6 +34,7 @@ def random_attack():
         pfcp_seid_fuzzing_customized,
         pfcp_far_fuzzing_customized,
         pfcp_hijack_far_manipulation_customized,
+        cn_mitm_customized,
     ]
     random.choice(attack_functions)(ip_list["EVIL"])
 
@@ -73,7 +59,7 @@ def main():
     sleep_min = float(input("Enter minimum sleep time: "))
     sleep_max = float(input("Enter maximum sleep time: "))
     sleep_range = (sleep_min, sleep_max)
-
+    random.seed(RANDOM_SEED)
     if choice == "1":
         thread = threading.Thread(
             target=execute_full_benin, args=(duration, sleep_range)
