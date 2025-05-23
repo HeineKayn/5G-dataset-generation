@@ -7,7 +7,7 @@ import json
 
 import threading, time
 
-from src import ip_list
+from src.const.load_const import ip_list
 
 
 class H2ProxyServer:
