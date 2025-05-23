@@ -35,6 +35,8 @@ def random_attack():
         pfcp_far_fuzzing_customized,
         pfcp_hijack_far_manipulation_customized,
         cn_mitm_customized,
+        udm_spoofing_customized,
+        free5gcCNFuzzing_customized,
     ]
     random.choice(attack_functions)(ip_list["EVIL"])
 
