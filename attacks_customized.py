@@ -4,7 +4,7 @@ from src.attacks.upf_pfcp.pfcpHijack import PFCPHijack
 
 from src.attacks.upf_gtp.uplinkSpoofing import start_gtp_uplink_attack
 
-from src.attacks.cn_mitm import start_mitm
+from src.attacks.cn_mitm import start_mitm_for
 
 
 from markers_process import handle_markers
@@ -145,7 +145,10 @@ def gtp_uplink_attack_customized(spoofed_addr):
 def cn_mitm_customized(spoofed_addr):
     handle_markers(
         "cnMitm",
-        lambda: start_mitm(nf_to_replace=ip_list["UDM"]),
+        lambda: start_mitm_for(
+            nf_to_replace=ip_list["UDM"],
+            seconds=10,
+        ),
     )
 
 
