@@ -28,7 +28,7 @@ def get_random_supi():
     client = docker.DockerClient(base_url="unix://var/run/docker.sock")
     container = client.containers.get("ueransim")
 
-    supi_finder = "grep -oP '(?<=supi: \")[^\"]+' config/uecfg.yaml"
+    supi_finder = "grep -oP '(?<=supi: \")[^\"]+' config/supi_test.yaml"
     result = container.exec_run(supi_finder, stdout=True, stderr=True)
     print(result.output.decode())
 
