@@ -30,7 +30,7 @@ def get_random_supi():
 
     supi_finder = "grep -oP '(?<=supi: \")[^\"]+' config/uecfg.yaml"
     result = container.exec_run(supi_finder, stdout=True, stderr=True)
-    print(result)
+    print(result.output.decode())
 
 
 # ---------------------------------------------------------------------------- #
