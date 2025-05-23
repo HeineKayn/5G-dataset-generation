@@ -5,9 +5,11 @@ import httpx
 from h2.events import *
 import json
 
-import threading, time
+import threading, time, sys, os
 
-from const.load_const import ip_list
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "/app/")))
+
+from src import ip_list
 
 
 class H2ProxyServer:
