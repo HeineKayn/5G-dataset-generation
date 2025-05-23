@@ -115,46 +115,46 @@ class H2ProxyServer:
 
         # --------------------- Making the MITM Server Stoppable --------------------- #
 
-        async def _run_stoppable(self):  # Nommée comme tu veux, ici '_run_stoppable'
-            self._server_loop = asyncio.get_running_loop()
-            if self.display:
-                print(
-                    f"[{threading.current_thread().name}] Starting stoppable MITM server on {self.host}:{self.port}..."
-                )
-
-            self._server_instance = await asyncio.start_server(
-                self.handle_client, self.host, self.port
+    async def _run_stoppable(self):  # Nommée comme tu veux, ici '_run_stoppable'
+        self._server_loop = asyncio.get_running_loop()
+        if self.display:
+            print(
+                f"[{threading.current_thread().name}] Starting stoppable MITM server on {self.host}:{self.port}..."
             )
 
-            async with self._server_instance:
+        self._server_instance = await asyncio.start_server(
+            self.handle_client, self.host, self.port
+        )
 
-                try:
-                    if self.display:
-                        print(
-                            f"[{threading.current_thread().name}] Stoppable MITM server running, awaiting termination signal..."
-                        )
-                    await self._server_instance.serve_forever()
+        async with self._server_instance:
 
-                except asyncio.CancelledError:
-                    if self.display:
-                        print(
-                            f"[{threading.current_thread().name}] Stoppable MITM server serve_forever() cancelled."
-                        )
+            try:
+                if self.display:
+                    print(
+                        f"[{threading.current_thread().name}] Stoppable MITM server running, awaiting termination signal..."
+                    )
+                await self._server_instance.serve_forever()
 
-                finally:
-                    if self.display:
-                        print(
-                            f"[{threading.current_thread().name}] Closing stoppable MITM server..."
-                        )
+            except asyncio.CancelledError:
+                if self.display:
+                    print(
+                        f"[{threading.current_thread().name}] Stoppable MITM server serve_forever() cancelled."
+                    )
 
-                    if self._server_instance and self._server_instance.is_serving():
-                        self._server_instance.close()
-                    await self._server_instance.wait_closed()
+            finally:
+                if self.display:
+                    print(
+                        f"[{threading.current_thread().name}] Closing stoppable MITM server..."
+                    )
 
-                    if self.display:
-                        print(
-                            f"[{threading.current_thread().name}] Stoppable MITM server closed."
-                        )
+                if self._server_instance and self._server_instance.is_serving():
+                    self._server_instance.close()
+                await self._server_instance.wait_closed()
+
+                if self.display:
+                    print(
+                        f"[{threading.current_thread().name}] Stoppable MITM server closed."
+                    )
 
     def stop_mitm(self):
         if (
