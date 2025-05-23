@@ -30,7 +30,9 @@ def get_random_supi():
 
     supi_finder = "grep -oP '(?<=supi: \")[^\"]+' config/supi_test.yaml"
     result = container.exec_run(supi_finder, stdout=True, stderr=True)
-    print(result.output.decode())
+    resStr = result.output.decode()
+    supiList = resStr.split("\n")
+    print(supiList)
 
 
 # ---------------------------------------------------------------------------- #
