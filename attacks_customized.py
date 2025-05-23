@@ -9,7 +9,7 @@ from src.attacks.cn_mitm import start_mitm_for
 
 from markers_process import handle_markers
 from src import *
-import random, ipaddress, copy
+import random, ipaddress, copy, docker
 
 
 # ---------------------------------------------------------------------------- #
@@ -22,6 +22,15 @@ def generate_random_public_ipv4():
         random_ip = ipaddress.IPv4Address(random_int)
         if random_ip.is_global:
             return str(random_ip)
+
+
+def get_random_supi():
+    client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+    container = client.containers.get("ueransim")
+
+    supi_finder = "grep -oP '(?<=supi: \")[^\"]+' config/uecfg.yaml"
+    result = container.exec_run(supi_finder, stdout=True, stderr=True)
+    print(result)
 
 
 # ---------------------------------------------------------------------------- #
