@@ -32,6 +32,7 @@ def get_random_supi():
     result = container.exec_run(supi_finder, stdout=True, stderr=True)
     resStr = result.output.decode()
     supiList = resStr.split("\n")
+    supiList = [item for item in supiList if item]
     print(supiList)
 
 
