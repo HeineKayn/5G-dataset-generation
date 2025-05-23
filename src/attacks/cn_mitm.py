@@ -158,7 +158,9 @@ class H2ProxyServer:
 
     def stop_mitm(self):
         if (
-            self._server_instance
+            hasattr(self, "_server_instance")
+            and self._server_instance
+            and hasattr(self, "_server_loop")
             and self._server_loop
             and not self._server_loop.is_closed()
         ):
@@ -167,9 +169,22 @@ class H2ProxyServer:
                     f"[{threading.current_thread().name}] Requesting MITM server stop from another thread..."
                 )
 
-            asyncio.run_coroutine_threadsafe(
-                self._server_instance.close(), self._server_loop
+            async def shutdown_server():
+                if self._server_instance.is_serving():
+                    self._server_instance.close()
+                    await self._server_instance.wait_closed()
+
+            future = asyncio.run_coroutine_threadsafe(
+                shutdown_server(), self._server_loop
             )
+
+            try:
+                future.result(timeout=5.0)
+            except asyncio.TimeoutError:
+                if self.display:
+                    print(
+                        f"[{threading.current_thread().name}] Server shutdown timed out"
+                    )
         else:
             if self.display:
                 print(
